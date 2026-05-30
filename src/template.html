@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Novated Lease Calculator v2.1 — Australia 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet"/>
+<style>
+/* BUILD:CSS */
+</style>
+</head>
+
+<body>
+<div class="page-wrap">
+
+<!-- ══════════════════════════════════════ HEADER ══ -->
+<header>
+  <div class="eyebrow">🇦🇺 Australia · 2026 Budget · ATO Compliant · v2.1</div>
+  <h1>Novated Lease <span>Calculator</span></h1>
+  <p class="header-sub">EV, PHEV and petrol — correct PMT, ATO residuals, 2026 Budget FBT phases, running costs, split-lease comparison.</p>
+  <div class="header-meta">
+    <span class="badge green">✓ 2026 Budget FBT phases</span>
+    <span class="badge green">✓ ATO residuals TD 93/142</span>
+    <span class="badge green">✓ Correct PMT balloon formula</span>
+    <span class="badge amber">⚠ General info only — not financial advice</span>
+    <button class="export-btn" id="pdfBtn" onclick="generatePDF()">⬇ Download PDF Report</button>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" id="themeIcon">☀️</span>
+      <span id="themeLabel">Light mode</span>
+    </button>
+  </div>
+</header>
+
+<!-- jsPDF + AutoTable for programmatic PDF generation (no browser print quirks) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<!-- ══════════════════════════════════════ MAIN GRID ══ -->
+<div class="main-grid">
+
+  <!-- ╔═══════════ LEFT: INPUTS ═══════════╗ -->
+  <div class="input-stack">
+
+    <!-- Vehicle Type -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-green">🚗</div><span class="card-title">Vehicle Type</span></div>
+      <div class="card-body">
+        <div class="field">
+          <div class="vtype-group">
+            <button class="vtype-btn vt-ev" id="vt-ev" onclick="setVehicleType('ev')">
+              <span class="vtype-icon">⚡</span><span class="vtype-name">Electric (BEV)</span>
+            </button>
+            <button class="vtype-btn" id="vt-phev" onclick="setVehicleType('phev')">
+              <span class="vtype-icon">🔌</span><span class="vtype-name">Plug-in Hybrid</span>
+            </button>
+            <button class="vtype-btn" id="vt-ice" onclick="setVehicleType('ice')">
+              <span class="vtype-icon">⛽</span><span class="vtype-name">Petrol / Diesel</span>
+            </button>
+          </div>
+        </div>
+        <div class="fnote" id="vtypeNote">BEVs &amp; hydrogen fuel-cell vehicles: eligible for FBT exemption under the 2026 Budget phase schedule.</div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-blue">👤</div><span class="card-title">Your Profile</span></div>
+      <div class="card-body">
+        <div class="field">
+          <label>Gross Annual Salary ($)</label>
+          <input type="number" id="salary" value="120000" min="0" step="1000"/>
+          <div class="fnote">Determines your marginal tax rate and PAYG savings.</div>
+        </div>
+        <div class="field">
+          <label>Other Pre-Tax Salary Sacrifice ($/month) <span class="lh">e.g. super top-up</span></label>
+          <input type="number" id="otherSS" value="0" min="0" step="100"/>
+          <div class="fnote">Applied before the vehicle deduction to find your true taxable income.</div>
+        </div>
+        <div class="field">
+          <div class="toggle-row">
+            <label class="tlabel">Include 2% Medicare Levy</label>
+            <input type="checkbox" id="medicare" checked/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle & Lease -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-green">💰</div><span class="card-title">Vehicle &amp; Lease Finance</span></div>
+      <div class="card-body">
+        <div class="field">
+          <label>Vehicle Driveaway Price ($ incl. GST)</label>
+          <input type="number" id="carPrice" value="64000" min="1000" step="500"/>
+          <div class="fnote">Incl. GST. Stamp duty &amp; rego excluded from FBT base value.</div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Lease Start Date</label>
+            <input type="date" id="startDate" value="2027-03-15"/>
+          </div>
+          <div class="field">
+            <label>Lease Term</label>
+            <select id="leaseTerm">
+              <option value="1">1 year</option>
+              <option value="2">2 years</option>
+              <option value="3" selected>3 years</option>
+              <option value="4">4 years</option>
+              <option value="5">5 years</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Finance APR (%)</label>
+            <input type="number" id="apr" value="9.5" min="0" max="30" step="0.1"/>
+            <div class="fnote">Market typical: 7–12% p.a.</div>
+          </div>
+          <div class="field">
+            <label>Residual % <span class="lh">ATO min</span></label>
+            <input type="number" id="residualPct" value="46.88" min="0" max="100" step="0.01"/>
+            <div class="fnote">1y=65.63 · 2y=56.25 · 3y=46.88 · 4y=37.50 · 5y=28.13</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Show Payments As</label>
+          <div class="freq-group">
+            <button class="freq-btn" id="freq-weekly" onclick="setFreq('weekly')">Weekly</button>
+            <button class="freq-btn active" id="freq-fortnightly" onclick="setFreq('fortnightly')">Fortnightly</button>
+            <button class="freq-btn" id="freq-monthly" onclick="setFreq('monthly')">Monthly</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Running Costs -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-green">⚡</div><span class="card-title">Annual Running Costs</span></div>
+      <div class="card-body">
+        <p style="font-size:.71rem;color:var(--text-2);margin-bottom:9px;font-weight:300">Packaged <strong style="color:var(--text)">pre-tax</strong> during FBT-exempt periods, multiplying your tax saving. Enter realistic annual estimates.</p>
+        <div class="two-col">
+          <div class="field"><label id="fuelLabel">Electricity / Charging ($)</label><input type="number" id="rcElec" value="750" min="0" step="50"/></div>
+          <div class="field"><label>Insurance ($)</label><input type="number" id="rcInsurance" value="1800" min="0" step="50"/></div>
+          <div class="field"><label>Registration &amp; CTP ($)</label><input type="number" id="rcRego" value="900" min="0" step="50"/></div>
+          <div class="field"><label>Servicing ($)</label><input type="number" id="rcService" value="500" min="0" step="50"/></div>
+          <div class="field"><label>Tyres ($)</label><input type="number" id="rcTyres" value="450" min="0" step="50"/></div>
+          <div class="field"><label>Roadside Assist. ($)</label><input type="number" id="rcRoadside" value="150" min="0" step="10"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Policy Sandbox -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-purple">⚙️</div><span class="card-title">Policy Sandbox</span><span class="badge amber hidden" id="sandboxModifiedBadge" style="margin-left:auto">⚠ Custom scenario</span></div>
+      <div class="card-body">
+        <p style="font-size:.7rem;color:var(--text-2);margin-bottom:9px;font-weight:300">Defaults = confirmed 2026 Budget. Adjust to stress-test alternative scenarios.</p>
+        <div class="two-col">
+          <div class="field">
+            <label>Full exempt cap ($)</label>
+            <input type="number" id="fbtCap" value="75000" min="0" step="1000"/>
+            <div class="fnote">EVs at or below this price are fully exempt (Phases 1 &amp; 2). Budget 2026: $75,000.</div>
+          </div>
+          <div class="field">
+            <label>LCT fuel-efficient ($)</label>
+            <input type="number" id="lctThreshold" value="91387" min="0" step="1000"/>
+            <div class="fnote">EVs above this price get no discount (full 20% applies). 2025-26: $91,387.</div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Phase 2 start</label>
+            <input type="date" id="phase2Date" value="2027-04-01"/>
+            <div class="fnote">After this date, the $75k–LCT band gets a 25% FBT discount. Budget 2026: 1 Apr 2027.</div>
+          </div>
+          <div class="field">
+            <label>Phase 3 start</label>
+            <input type="date" id="phase3Date" value="2029-04-01"/>
+            <div class="fnote">After this date, all sub-LCT EVs get the 25% discount. Budget 2026: 1 Apr 2029.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Post-phase-3 statutory rate (%)</label>
+          <input type="number" id="postRate" value="15" min="0" max="20" step="0.5"/>
+          <div class="fnote">Statutory rate for eligible EVs in Phases 2 &amp; 3 (25% discount from 20% base). Budget 2026: 15%.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Policy Legend -->
+    <div class="policy-legend">
+      <h4>2026 Budget FBT Phase Schedule (BEV only)</h4>
+      <div class="policy-row"><div class="pdot g"></div><div><strong>Now → 31 Mar 2027:</strong> BEV ≤$75k = 0% (exempt). BEV $75k–LCT = no discount. ICE/PHEV = full 20%.</div></div>
+      <div class="policy-row"><div class="pdot a"></div><div><strong>1 Apr 2027 → 31 Mar 2029:</strong> BEV ≤$75k = still exempt. BEV $75k–LCT = 25% discount (15% rate). ICE/PHEV = 20%.</div></div>
+      <div class="policy-row"><div class="pdot b"></div><div><strong>From 1 Apr 2029:</strong> All sub-LCT BEVs → 25% discount (15% statutory). Grandfathering ends for new leases.</div></div>
+      <div class="policy-row"><div class="pdot d"></div><div><strong>Grandfathering:</strong> Rate locks in at arrangement start. A renewal = new arrangement, new rate.</div></div>
+    </div>
+
+  </div><!-- /input-stack -->
+
+  <!-- ╔═══════════ RIGHT: DASHBOARD ═══════════╗ -->
+  <div id="dashboard">
+
+    <!-- KPI Row — 6 tiles, 3 wide -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">FBT Status</div>
+        <div class="kpi-val green" id="kpiFbt">—</div>
+        <div class="kpi-sub" id="kpiFbtSub"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label" id="kpiPayLabel">Finance Payment</div>
+        <div class="kpi-val blue" id="kpiPayFinance">—</div>
+        <div class="kpi-sub" id="kpiPayFinanceSub">Pure lease repayment only</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label" id="kpiPayTotalLabel">Total Pre-Tax Deduction</div>
+        <div class="kpi-val blue" id="kpiPayTotal">—</div>
+        <div class="kpi-sub">Finance + running costs (pre-tax)</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label" id="kpiTakeHomeLabel">Take-Home Pay Impact</div>
+        <div class="kpi-val amber" id="kpiTakeHome">—</div>
+        <div class="kpi-sub" id="kpiTakeHomeSub">Actual reduction to net pay</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Marginal Tax Rate</div>
+        <div class="kpi-val amber" id="kpiMtr">—</div>
+        <div class="kpi-sub">Incl. Medicare if checked</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">GST Saving (Purchase)</div>
+        <div class="kpi-val green" id="kpiGst">—</div>
+        <div class="kpi-sub">Employer claims input tax credit (1/11)</div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alerts" id="alertsBox"></div>
+
+    <!-- Savings clarification note — always visible -->
+    <div id="savingsNote" class="savings-note" style="display:none"></div>
+
+    <!-- View Tabs -->
+    <div class="view-tabs screen-only">
+      <button class="view-tab active" id="tabA" onclick="switchView('single')">📋 My Lease (Option A)</button>
+      <button class="view-tab" id="tabB" onclick="switchView('compare')">⚖️ Compare Split Structure</button>
+    </div>
+
+    <!-- VIEW: SINGLE (Option A) -->
+    <div id="viewSingle">
+
+      <div class="option-card">
+        <div class="option-head">
+          <div>
+            <div class="option-title" id="optATitle">—</div>
+            <div class="option-sub" id="optADesc"></div>
+          </div>
+          <button class="export-btn screen-only" onclick="exportCSV('A')">⬇ CSV</button>
+        </div>
+
+        <!-- Residual -->
+        <div class="residual-section">
+          <div class="residual-eyebrow">Balloon Payment(s) Due at End of Lease</div>
+          <div class="residual-chips" id="residualChipsA"></div>
+          <p class="fnote" style="margin-top:6px">At lease end you owe this amount — options: pay cash, refinance, or trade in / return the vehicle.</p>
+        </div>
+
+        <!-- Summary KPIs — 4 columns with clear labels -->
+        <div class="opt-kpi-row" id="optKpiRowA">
+          <div class="opt-kpi">
+            <div class="opt-kpi-label">Total Savings</div>
+            <div class="opt-kpi-val green" id="optATotalSavings">—</div>
+            <div class="opt-kpi-note" id="optATotalNote"></div>
+          </div>
+          <div class="opt-kpi">
+            <div class="opt-kpi-label">Income Tax Saved</div>
+            <div class="opt-kpi-val green" id="optATaxSaved">—</div>
+            <div class="opt-kpi-note">From pre-tax salary sacrifice</div>
+          </div>
+          <div class="opt-kpi">
+            <div class="opt-kpi-label">ECM Post-Tax Total</div>
+            <div class="opt-kpi-val amber" id="optAEcm">—</div>
+            <div class="opt-kpi-note">Your post-tax contribution to eliminate employer FBT. $0 when fully exempt.</div>
+          </div>
+          <div class="opt-kpi">
+            <div class="opt-kpi-label">Net Benefit vs Cash</div>
+            <div class="opt-kpi-val" id="optANet">—</div>
+            <div class="opt-kpi-note">After interest &amp; ECM costs</div>
+          </div>
+        </div>
+
+        <!-- Ledger -->
+        <div class="ledger-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th id="ledgerColFinance">Finance Pymt</th>
+                <th id="ledgerColTotal">Total Pre-Tax</th>
+                <th id="ledgerColTakeHome">Take-Home Impact</th>
+                <th title="Employee Contribution Method — post-tax amount required to eliminate employer FBT when statutory rate > 0%">ECM Post-Tax/yr</th>
+                <th>FBT Status</th>
+                <th>Tax Saved/yr</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerA"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cost Breakdown -->
+      <div class="cost-bd">
+        <div class="cost-bd-head">📊 Is the lending cost eating your tax saving? (Option A)</div>
+        <div class="cost-bd-body" id="costBdBody"></div>
+      </div>
+
+    </div><!-- /viewSingle -->
+
+    <!-- VIEW: COMPARE -->
+    <div id="viewCompare" class="hidden">
+
+      <div class="compare-controls screen-only">
+        <label>Split structure:</label>
+        <select id="splitSelect" class="split-select" onchange="runEngine()"></select>
+        <span style="font-size:.7rem;color:var(--text-2);font-weight:300">Renewal = new arrangement; captures FBT rate at renewal date.</span>
+      </div>
+
+      <!-- For print: show currently selected split -->
+      <div id="splitDescPrint" style="display:none;margin-bottom:10px;font-size:.8rem;color:var(--text-2)"></div>
+
+      <!-- VERDICT FIRST -->
+      <div class="verdict-panel">
+        <div class="verdict-eyebrow">Δ Variance Analysis</div>
+        <div class="verdict-text" id="verdictText">Select a split structure above.</div>
+      </div>
+
+      <!-- Then the two scenario cards, stacked. JS fills scWinner then scLoser. -->
+      <div class="compare-grid" id="compareGrid">
+        <!-- filled by JS: winner card first, then loser card -->
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px" class="screen-only">
+        <button class="export-btn" onclick="exportCSV('both')">⬇ Export Both to CSV</button>
+      </div>
+
+    </div><!-- /viewCompare -->
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+      <strong>Disclaimer &amp; Sources</strong><br/>
+      General information only — not financial or tax advice. Always consult a registered tax agent.<br/><br/>
+      <strong>Sources:</strong> ATO FBTAA 1986 s.7 (statutory formula) · TD 93/142 (residual values) · Budget 2026-27 Paper No.2 — Electric Car Discount · ATO Income Tax Rates 2026-27 · AusTax.tools FBT Electric Car Discount Reform May 2026 · ATO Electric Cars Exemption.<br/><br/>
+      <strong>Key assumptions:</strong> FBT base = driveaway price incl. GST (ATO statutory formula). Stamp duty &amp; rego excluded. Running costs pre-tax when FBT-exempt. ECM post-tax = car base × statutory rate (zeros employer FBT). Residuals per TD 93/142 (8-yr effective life). Tax brackets 2026-27. Split renewal = new arrangement (ATO grandfathering). PHEV: exemption ended 1 Apr 2025. ICE/Petrol: full 20% statutory rate always. <strong>Total Savings = income tax saved + GST on vehicle + GST on running costs.</strong> Take-home pay impact = pre-tax deduction × (1 − marginal tax rate) + any ECM post-tax.
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /main-grid -->
+</div><!-- /page-wrap -->
+
+<!-- ══════════════════════════════════════════════════════
+     CALCULATION ENGINE v2.1
+══════════════════════════════════════════════════════ -->
+<script>
+/* BUILD:JS */
+</script>
+</body>
+</html>

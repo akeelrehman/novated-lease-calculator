@@ -1,0 +1,8 @@
+{
+  "name": "novated-lease-calculator",
+  "version": "2.1.0",
+  "description": "Novated lease calculator — Australia 2026",
+  "scripts": {
+    "build": "node build.js"
+  }
+}

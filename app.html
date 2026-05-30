@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Novated Lease Calculator v2.1 — Australia 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════════ */
+:root {
+  --bg:       #0d0f14;
+  --surface:  #13161d;
+  --raised:   #1a1e28;
+  --border:   #252a38;
+  --muted:    #3a3f52;
+  --text:     #e8ecf4;
+  --text-2:   #8b91a8;
+  --text-3:   #555c75;
+  --accent:   #4ade80;
+  --warn:     #fbbf24;
+  --danger:   #f87171;
+  --blue:     #60a5fa;
+  --purple:   #a78bfa;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Syne', sans-serif;
+  --r: 12px;
+  --rs: 7px;
+}
+
+/* ══════════════════════════════════════════
+   LIGHT THEME
+══════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg:       #f0f4f8;
+  --surface:  #ffffff;
+  --raised:   #e8edf4;
+  --border:   #d0d8e4;
+  --muted:    #a8b4c8;
+  --text:     #1a2035;
+  --text-2:   #4a5568;
+  --text-3:   #6b7280;
+  --accent:   #16a34a;
+  --warn:     #d97706;
+  --danger:   #dc2626;
+  --blue:     #2563eb;
+  --purple:   #7c3aed;
+}
+
+[data-theme="light"] .badge.green{border-color:#bbf7d0;color:#15803d;background:#f0fdf4}
+[data-theme="light"] .badge.amber{border-color:#fde68a;color:#b45309;background:#fffbeb}
+[data-theme="light"] .ci-blue{background:#dbeafe}
+[data-theme="light"] .ci-green{background:#dcfce7}
+[data-theme="light"] .ci-amber{background:#fef9c3}
+[data-theme="light"] .ci-purple{background:#ede9fe}
+[data-theme="light"] .vtype-btn.vt-ev{border-color:#16a34a;background:#f0fdf4}
+[data-theme="light"] .vtype-btn.vt-phev{border-color:#d97706;background:#fffbeb}
+[data-theme="light"] .vtype-btn.vt-ice{border-color:#dc2626;background:#fef2f2}
+[data-theme="light"] .freq-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+[data-theme="light"] .view-tab.active{background:var(--accent);color:#fff}
+[data-theme="light"] .winner-tag{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+[data-theme="light"] .scenario-card.winner{border-color:var(--accent)}
+[data-theme="light"] .pill-exempt{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+[data-theme="light"] .pill-partial{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+[data-theme="light"] .pill-exposed{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+[data-theme="light"] .alert.warn{background:#fffbeb;border-color:var(--warn);color:#92400e}
+[data-theme="light"] .alert.danger{background:#fef2f2;border-color:var(--danger);color:#991b1b}
+[data-theme="light"] .alert.info{background:#eff6ff;border-color:var(--blue);color:#1e40af}
+[data-theme="light"] .savings-note{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+[data-theme="light"] input[type=checkbox]{background:var(--border)}
+[data-theme="light"] input[type=checkbox]:checked{background:var(--accent)}
+[data-theme="light"] select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a5568' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
+[data-theme="light"] ::-webkit-scrollbar-track{background:var(--bg)}
+[data-theme="light"] ::-webkit-scrollbar-thumb{background:var(--muted)}
+[data-theme="light"] .residual-chip-val{color:#b45309}
+
+
+/* ══════════════════════════════════════════
+   THEME TOGGLE BUTTON
+══════════════════════════════════════════ */
+.theme-toggle{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--raised);border:1px solid var(--border);border-radius:var(--rs);
+  color:var(--text-2);font-size:.7rem;font-family:var(--sans);font-weight:500;
+  padding:6px 11px;cursor:pointer;transition:all .2s;white-space:nowrap;
+  margin-left:auto
+}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.theme-toggle-icon{font-size:.85rem}
+
+/* ══════════════════════════════════════════
+   RESET + BASE
+══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:.9rem;line-height:1.6;min-height:100vh}
+
+/* ══════════════════════════════════════════
+   SCREEN LAYOUT
+══════════════════════════════════════════ */
+.page-wrap{max-width:1380px;margin:0 auto;padding:0 16px 80px}
+
+/* Two-column: fixed inputs left, fluid dashboard right */
+.main-grid{
+  display:grid;
+  grid-template-columns:clamp(300px,36%,420px) minmax(0,1fr); /* minmax(0,1fr) prevents overflow */
+  gap:20px;
+  align-items:start;
+}
+@media(max-width:960px){.main-grid{grid-template-columns:1fr}}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+header{padding:32px 0 24px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.eyebrow{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+header h1{font-family:var(--display);font-size:clamp(1.4rem,3.2vw,2.1rem);font-weight:800;line-height:1.15;letter-spacing:-.02em}
+header h1 span{color:var(--accent)}
+.header-sub{margin-top:5px;color:var(--text-2);font-size:.8rem;max-width:680px;font-weight:300}
+.header-meta{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.badge{display:inline-flex;align-items:center;font-size:.68rem;font-family:var(--mono);letter-spacing:.04em;padding:3px 9px;border-radius:99px;border:1px solid var(--border);color:var(--text-2);background:var(--surface)}
+.badge.green{border-color:#1e4d36;color:var(--accent);background:#0d2219}
+.badge.amber{border-color:#4d3a10;color:var(--warn);background:#251c08}
+
+/* ══════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════ */
+.export-btn{display:inline-flex;align-items:center;gap:5px;background:var(--raised);border:1px solid var(--border);border-radius:var(--rs);color:var(--text-2);font-size:.7rem;font-family:var(--sans);font-weight:500;padding:6px 11px;cursor:pointer;transition:all .14s;text-decoration:none}
+.export-btn:hover{border-color:var(--accent);color:var(--accent)}
+.hidden{display:none!important}
+.savings-note{margin-bottom:13px;padding:9px 13px;background:#0d2219;border:1px solid #1e4d36;border-radius:var(--rs);font-size:.74rem;color:#b9f4cc;line-height:1.6}
+.disclaimer{margin-top:24px;padding:13px 15px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);font-size:.68rem;color:var(--text-3);line-height:1.7}
+.disclaimer strong{color:var(--text-2)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--muted);border-radius:3px}
+
+/* screen-only marker class — no styles needed, used by JS only */
+.screen-only{}
+
+
+/* ══════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.card-head{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.chicon{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.78rem;flex-shrink:0}
+.ci-blue{background:#0b1b2e} .ci-green{background:#0d2219} .ci-amber{background:#251c08} .ci-purple{background:#1a1040}
+.card-title{font-family:var(--display);font-size:.8rem;font-weight:700;color:var(--text)}
+.card-body{padding:14px}
+.input-stack{display:flex;flex-direction:column;gap:12px}
+
+/* ══════════════════════════════════════════
+   FORM CONTROLS
+══════════════════════════════════════════ */
+.field{margin-bottom:10px}
+.field:last-child{margin-bottom:0}
+label{display:block;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);margin-bottom:4px}
+.lh{font-size:.66rem;font-weight:300;letter-spacing:0;text-transform:none;color:var(--text-3);margin-left:3px}
+input[type=number],input[type=date],select{
+  width:100%;background:var(--raised);border:1px solid var(--border);border-radius:var(--rs);
+  color:var(--text);font-family:var(--mono);font-size:.83rem;padding:7px 10px;
+  outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none
+}
+input:focus,select:focus{border-color:var(--accent)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b91a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.fnote{font-size:.67rem;color:var(--text-3);margin-top:3px;font-weight:300}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 9px}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--raised);border:1px solid var(--border);border-radius:var(--rs)}
+.tlabel{font-size:.76rem;color:var(--text-2);font-weight:400;text-transform:none;letter-spacing:0;margin-bottom:0}
+input[type=checkbox]{width:32px;height:17px;-webkit-appearance:none;appearance:none;background:var(--border);border-radius:99px;cursor:pointer;position:relative;transition:background .18s;flex-shrink:0}
+input[type=checkbox]:checked{background:var(--accent)}
+input[type=checkbox]::after{content:'';position:absolute;width:11px;height:11px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .17s}
+input[type=checkbox]:checked::after{left:18px}
+
+/* Vehicle type selector */
+.vtype-group{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.vtype-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 5px;background:var(--raised);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .14s;text-align:center}
+.vtype-btn:hover{border-color:var(--muted)}
+.vtype-btn.vt-ev{border-color:var(--accent);background:#0d2219}
+.vtype-btn.vt-phev{border-color:var(--warn);background:#251c08}
+.vtype-btn.vt-ice{border-color:var(--danger);background:#1e0a0a}
+.vtype-icon{font-size:1rem}
+.vtype-name{font-size:.65rem;font-family:var(--mono);letter-spacing:.04em;color:var(--text-2);font-weight:500}
+.vtype-btn.vt-ev .vtype-name{color:var(--accent)}
+.vtype-btn.vt-phev .vtype-name{color:var(--warn)}
+.vtype-btn.vt-ice .vtype-name{color:var(--danger)}
+
+/* Frequency selector */
+.freq-group{display:flex;gap:4px}
+.freq-btn{flex:1;padding:6px 3px;background:var(--raised);border:1px solid var(--border);border-radius:var(--rs);color:var(--text-3);font-size:.7rem;font-family:var(--mono);letter-spacing:.04em;cursor:pointer;text-align:center;transition:all .14s}
+.freq-btn.active{background:var(--accent);border-color:var(--accent);color:#0d1a12;font-weight:700}
+.freq-btn:hover:not(.active){border-color:var(--muted);color:var(--text-2)}
+
+/* ══════════════════════════════════════════
+   KPI GRID
+══════════════════════════════════════════ */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 13px 11px}
+.kpi-label{font-size:.62rem;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:4px}
+.kpi-val{font-family:var(--mono);font-size:1.2rem;font-weight:500;line-height:1}
+.kpi-val.green{color:var(--accent)} .kpi-val.amber{color:var(--warn)} .kpi-val.blue{color:var(--blue)} .kpi-val.danger{color:var(--danger)}
+.kpi-sub{font-size:.63rem;color:var(--text-3);margin-top:4px;line-height:1.35}
+
+/* ══════════════════════════════════════════
+   ALERTS
+══════════════════════════════════════════ */
+.alerts{display:flex;flex-direction:column;gap:6px;margin-bottom:15px}
+.alert{padding:8px 12px;border-radius:var(--rs);font-size:.76rem;line-height:1.5;border-left:3px solid}
+.alert.warn{background:#1e1800;border-color:var(--warn);color:#f5d98a}
+.alert.danger{background:#1e0a0a;border-color:var(--danger);color:#f9a8a8}
+.alert.info{background:#0b1a30;border-color:var(--blue);color:#93c5fd}
+.alert b{font-weight:600}
+
+/* ══════════════════════════════════════════
+   VIEW TABS
+══════════════════════════════════════════ */
+.view-tabs{display:flex;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-bottom:15px}
+.view-tab{flex:1;padding:9px 10px;background:var(--raised);border:none;border-right:1px solid var(--border);color:var(--text-2);font-size:.76rem;font-family:var(--sans);font-weight:500;cursor:pointer;text-align:center;transition:all .14s}
+.view-tab:last-child{border-right:none}
+.view-tab.active{background:var(--accent);color:#0a1a0e;font-weight:700}
+.view-tab:hover:not(.active){background:var(--surface);color:var(--text)}
+
+/* ══════════════════════════════════════════
+   OPTION A — SINGLE PANEL
+══════════════════════════════════════════ */
+.option-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:15px}
+.option-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.option-title{font-family:var(--display);font-size:.88rem;font-weight:700;color:var(--text)}
+.option-sub{font-size:.7rem;color:var(--text-2);margin-top:1px}
+
+/* Residual callout */
+.residual-section{padding:10px 14px;border-bottom:1px solid var(--border)}
+.residual-eyebrow{font-size:.63rem;font-family:var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+.residual-chips{display:flex;flex-wrap:wrap;gap:10px}
+.residual-chip{padding:8px 12px;background:var(--raised);border:1px solid var(--border);border-radius:var(--rs)}
+.residual-chip-label{font-size:.62rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)}
+.residual-chip-val{font-family:var(--mono);font-size:.95rem;font-weight:500;color:var(--warn);margin-top:2px}
+.residual-chip-note{font-size:.64rem;color:var(--text-3);font-weight:300;margin-top:1px}
+
+/* Option summary KPIs */
+.opt-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)}
+@media(max-width:700px){.opt-kpi-row{grid-template-columns:1fr 1fr}}
+@media(min-width:701px) and (max-width:1180px){.opt-kpi-row{grid-template-columns:1fr 1fr}}
+.opt-kpi{padding:10px 13px;border-right:1px solid var(--border)}
+.opt-kpi:last-child{border-right:none}
+.opt-kpi-label{font-size:.61rem;font-family:var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--text-3)}
+.opt-kpi-val{font-family:var(--mono);font-size:.9rem;font-weight:500;margin-top:2px}
+.opt-kpi-val.green{color:var(--accent)} .opt-kpi-val.amber{color:var(--warn)} .opt-kpi-val.blue{color:var(--blue)} .opt-kpi-val.danger{color:var(--danger)}
+.opt-kpi-note{font-size:.61rem;color:var(--text-3);font-weight:300;margin-top:1px}
+
+/* ══════════════════════════════════════════
+   LEDGER TABLE
+══════════════════════════════════════════ */
+.ledger-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:.73rem}
+thead th{padding:7px 9px;font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);background:var(--raised);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:7px 9px;color:var(--text-2);font-family:var(--mono);vertical-align:middle;white-space:nowrap}
+tbody td:first-child{color:var(--text);font-weight:500;white-space:normal;min-width:120px}
+.status-pill{display:inline-block;font-size:.61rem;font-family:var(--mono);letter-spacing:.05em;padding:2px 6px;border-radius:99px}
+.pill-exempt{background:#0d2219;color:var(--accent);border:1px solid #1e4d36}
+.pill-partial{background:#251c08;color:var(--warn);border:1px solid #4d3a10}
+.pill-exposed{background:#1e0a0a;color:var(--danger);border:1px solid #4d1c1c}
+
+/* ══════════════════════════════════════════
+   COMPARISON VIEW — fully responsive
+══════════════════════════════════════════ */
+.compare-controls{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 14px;margin-bottom:14px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap
+}
+.compare-controls label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:0;white-space:nowrap}
+.split-select{width:auto;min-width:130px}
+
+/* Single column: verdict first, then winner, then other — no overflow possible */
+.compare-grid{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:13px;
+  min-width:0;
+  width:100%;
+}
+
+.scenario-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;width:100%;min-width:0
+}
+.scenario-card.winner{border-color:var(--accent);border-width:2px}
+.scenario-card.loser{opacity:.88}
+.scenario-head{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.sc-label{font-family:var(--display);font-size:.88rem;font-weight:700}
+.sc-label.green{color:var(--accent)} .sc-label.amber{color:var(--warn)}
+.winner-tag{font-size:.62rem;font-family:var(--mono);font-weight:500;letter-spacing:.08em;text-transform:uppercase;background:#0d2219;color:var(--accent);border:1px solid #1e4d36;padding:2px 8px;border-radius:99px;flex-shrink:0;align-self:center}
+
+/* 4-col KPI summary inside each scenario card */
+.sc-kpis{padding:10px 15px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-bottom:1px solid var(--border)}
+@media(max-width:600px){.sc-kpis{grid-template-columns:1fr 1fr}}
+.sc-kpi-label{font-size:.61rem;font-family:var(--mono);letter-spacing:.05em;color:var(--text-3);text-transform:uppercase}
+.sc-kpi-val{font-family:var(--mono);font-size:.9rem;font-weight:500;color:var(--text);margin-top:1px}
+.sc-kpi-val.accent{color:var(--accent)} .sc-kpi-val.warn{color:var(--warn)} .sc-kpi-val.danger{color:var(--danger)}
+
+/* Residual chips inside scenario card */
+.sc-residuals{padding:8px 15px;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)}
+
+/* ══════════════════════════════════════════
+   VERDICT PANEL
+══════════════════════════════════════════ */
+.verdict-panel{background:var(--raised);border:1px solid var(--border);border-radius:var(--r);padding:13px 17px;margin-bottom:16px}
+.verdict-eyebrow{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:4px}
+.verdict-text{font-size:.8rem;color:var(--text-2);line-height:1.65}
+.verdict-text strong{color:var(--text);font-weight:600}
+.verdict-text .green{color:var(--accent)} .verdict-text .amber{color:var(--warn)}
+
+/* ══════════════════════════════════════════
+   COST BREAKDOWN
+══════════════════════════════════════════ */
+.cost-bd{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.cost-bd-head{padding:10px 15px;border-bottom:1px solid var(--border);font-family:var(--display);font-size:.78rem;font-weight:700;color:var(--text)}
+.cost-bd-body{padding:11px 15px;display:flex;flex-direction:column;gap:6px}
+.cost-row{display:flex;justify-content:space-between;align-items:center;font-size:.76rem}
+.cost-label{color:var(--text-2)}
+.cost-val{font-family:var(--mono);font-size:.8rem;font-weight:500}
+.cost-val.pos{color:var(--accent)} .cost-val.neg{color:var(--danger)}
+.cost-div{border:none;border-top:1px solid var(--border);margin:2px 0}
+.cost-total .cost-label{font-weight:600;color:var(--text)}
+.cost-total .cost-val{font-size:.92rem}
+.cost-note{margin-top:5px;padding:8px 11px;background:var(--raised);border-radius:var(--rs);font-size:.71rem;color:var(--text-2)}
+
+/* ══════════════════════════════════════════
+   POLICY LEGEND
+══════════════════════════════════════════ */
+.policy-legend{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;font-size:.73rem;color:var(--text-2)}
+.policy-legend h4{font-family:var(--display);font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:8px}
+.policy-row{display:flex;gap:7px;margin-bottom:5px;line-height:1.4}
+.policy-row:last-child{margin-bottom:0}
+.pdot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.pdot.g{background:var(--accent)} .pdot.a{background:var(--warn)} .pdot.b{background:var(--blue)} .pdot.d{background:var(--danger)}
+
+</style>
+</head>
+
+<body>
+<div class="page-wrap">
+
+<!-- ══════════════════════════════════════ HEADER ══ -->
+<header>
+  <div class="eyebrow">🇦🇺 Australia · 2026 Budget · ATO Compliant · v2.1</div>
+  <h1>Novated Lease <span>Calculator</span></h1>
+  <p class="header-sub">EV, PHEV and petrol — correct PMT, ATO residuals, 2026 Budget FBT phases, running costs, split-lease comparison.</p>
+  <div class="header-meta">
+    <span class="badge green">✓ 2026 Budget FBT phases</span>
+    <span class="badge green">✓ ATO residuals TD 93/142</span>
+    <span class="badge green">✓ Correct PMT balloon formula</span>
+    <span class="badge amber">⚠ General info only — not financial advice</span>
+    <button class="export-btn" id="pdfBtn" onclick="generatePDF()">⬇ Download PDF Report</button>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" id="themeIcon">☀️</span>
+      <span id="themeLabel">Light mode</span>
+    </button>
+  </div>
+</header>
+
+<!-- jsPDF + AutoTable for programmatic PDF generation (no browser print quirks) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<!-- ══════════════════════════════════════ MAIN GRID ══ -->
+<div class="main-grid">
+
+  <!-- ╔═══════════ LEFT: INPUTS ═══════════╗ -->
+  <div class="input-stack">
+
+    <!-- Vehicle Type -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-green">🚗</div><span class="card-title">Vehicle Type</span></div>
+      <div class="card-body">
+        <div class="field">
+          <div class="vtype-group">
+            <button class="vtype-btn vt-ev" id="vt-ev" onclick="setVehicleType('ev')">
+              <span class="vtype-icon">⚡</span><span class="vtype-name">Electric (BEV)</span>
+            </button>
+            <button class="vtype-btn" id="vt-phev" onclick="setVehicleType('phev')">
+              <span class="vtype-icon">🔌</span><span class="vtype-name">Plug-in Hybrid</span>
+            </button>
+            <button class="vtype-btn" id="vt-ice" onclick="setVehicleType('ice')">
+              <span class="vtype-icon">⛽</span><span class="vtype-name">Petrol / Diesel</span>
+            </button>
+          </div>
+        </div>
+        <div class="fnote" id="vtypeNote">BEVs &amp; hydrogen fuel-cell vehicles: eligible for FBT exemption under the 2026 Budget phase schedule.</div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-blue">👤</div><span class="card-title">Your Profile</span></div>
+      <div class="card-body">
+        <div class="field">
+          <label>Gross Annual Salary ($)</label>
+          <input type="number" id="salary" value="120000" min="0" step="1000"/>
+          <div class="fnote">Determines your marginal tax rate and PAYG savings.</div>
+        </div>
+        <div class="field">
+          <label>Other Pre-Tax Salary Sacrifice ($/month) <span class="lh">e.g. super top-up</span></label>
+          <input type="number" id="otherSS" value="0" min="0" step="100"/>
+          <div class="fnote">Applied before the vehicle deduction to find your true taxable income.</div>
+        </div>
+        <div class="field">
+          <div class="toggle-row">
+            <label class="tlabel">Include 2% Medicare Levy</label>
+            <input type="checkbox" id="medicare" checked/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle & Lease -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-green">💰</div><span class="card-title">Vehicle &amp; Lease Finance</span></div>
+      <div class="card-body">
+        <div class="field">
+          <label>Vehicle Driveaway Price ($ incl. GST)</label>
+          <input type="number" id="carPrice" value="64000" min="1000" step="500"/>
+          <div class="fnote">Incl. GST. Stamp duty &amp; rego excluded from FBT base value.</div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Lease Start Date</label>
+            <input type="date" id="startDate" value="2027-03-15"/>
+          </div>
+          <div class="field">
+            <label>Lease Term</label>
+            <select id="leaseTerm">
+              <option value="1">1 year</option>
+              <option value="2">2 years</option>
+              <option value="3" selected>3 years</option>
+              <option value="4">4 years</option>
+              <option value="5">5 years</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Finance APR (%)</label>
+            <input type="number" id="apr" value="9.5" min="0" max="30" step="0.1"/>
+            <div class="fnote">Market typical: 7–12% p.a.</div>
+          </div>
+          <div class="field">
+            <label>Residual % <span class="lh">ATO min</span></label>
+            <input type="number" id="residualPct" value="46.88" min="0" max="100" step="0.01"/>
+            <div class="fnote">1y=65.63 · 2y=56.25 · 3y=46.88 · 4y=37.50 · 5y=28.13</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Show Payments As</label>
+          <div class="freq-group">
+            <button class="freq-btn" id="freq-weekly" onclick="setFreq('weekly')">Weekly</button>
+            <button class="freq-btn active" id="freq-fortnightly" onclick="setFreq('fortnightly')">Fortnightly</button>
+            <button class="freq-btn" id="freq-monthly" onclick="setFreq('monthly')">Monthly</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Running Costs -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-green">⚡</div><span class="card-title">Annual Running Costs</span></div>
+      <div class="card-body">
+        <p style="font-size:.71rem;color:var(--text-2);margin-bottom:9px;font-weight:300">Packaged <strong style="color:var(--text)">pre-tax</strong> during FBT-exempt periods, multiplying your tax saving. Enter realistic annual estimates.</p>
+        <div class="two-col">
+          <div class="field"><label id="fuelLabel">Electricity / Charging ($)</label><input type="number" id="rcElec" value="750" min="0" step="50"/></div>
+          <div class="field"><label>Insurance ($)</label><input type="number" id="rcInsurance" value="1800" min="0" step="50"/></div>
+          <div class="field"><label>Registration &amp; CTP ($)</label><input type="number" id="rcRego" value="900" min="0" step="50"/></div>
+          <div class="field"><label>Servicing ($)</label><input type="number" id="rcService" value="500" min="0" step="50"/></div>
+          <div class="field"><label>Tyres ($)</label><input type="number" id="rcTyres" value="450" min="0" step="50"/></div>
+          <div class="field"><label>Roadside Assist. ($)</label><input type="number" id="rcRoadside" value="150" min="0" step="10"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Policy Sandbox -->
+    <div class="card">
+      <div class="card-head"><div class="chicon ci-purple">⚙️</div><span class="card-title">Policy Sandbox</span><span class="badge amber hidden" id="sandboxModifiedBadge" style="margin-left:auto">⚠ Custom scenario</span></div>
+      <div class="card-body">
+        <p style="font-size:.7rem;color:var(--text-2);margin-bottom:9px;font-weight:300">Defaults = confirmed 2026 Budget. Adjust to stress-test alternative scenarios.</p>
+        <div class="two-col">
+          <div class="field">
+            <label>Full exempt cap ($)</label>
+            <input type="number" id="fbtCap" value="75000" min="0" step="1000"/>
+            <div class="fnote">EVs at or below this price are fully exempt (Phases 1 &amp; 2). Budget 2026: $75,000.</div>
+          </div>
+          <div class="field">
+            <label>LCT fuel-efficient ($)</label>
+            <input type="number" id="lctThreshold" value="91387" min="0" step="1000"/>
+            <div class="fnote">EVs above this price get no discount (full 20% applies). 2025-26: $91,387.</div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Phase 2 start</label>
+            <input type="date" id="phase2Date" value="2027-04-01"/>
+            <div class="fnote">After this date, the $75k–LCT band gets a 25% FBT discount. Budget 2026: 1 Apr 2027.</div>
+          </div>
+          <div class="field">
+            <label>Phase 3 start</label>
+            <input type="date" id="phase3Date" value="2029-04-01"/>
+            <div class="fnote">After this date, all sub-LCT EVs get the 25% discount. Budget 2026: 1 Apr 2029.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Post-phase-3 statutory rate (%)</label>
+          <input type="number" id="postRate" value="15" min="0" max="20" step="0.5"/>
+          <div class="fnote">Statutory rate for eligible EVs in Phases 2 &amp; 3 (25% discount from 20% base). Budget 2026: 15%.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Policy Legend -->
+    <div class="policy-legend">
+      <h4>2026 Budget FBT Phase Schedule (BEV only)</h4>
+      <div class="policy-row"><div class="pdot g"></div><div><strong>Now → 31 Mar 2027:</strong> BEV ≤$75k = 0% (exempt). BEV $75k–LCT = no discount. ICE/PHEV = full 20%.</div></div>
+      <div class="policy-row"><div class="pdot a"></div><div><strong>1 Apr 2027 → 31 Mar 2029:</strong> BEV ≤$75k = still exempt. BEV $75k–LCT = 25% discount (15% rate). ICE/PHEV = 20%.</div></div>
+      <div class="policy-row"><div class="pdot b"></div><div><strong>From 1 Apr 2029:</strong> All sub-LCT BEVs → 25% discount (15% statutory). Grandfathering ends for new leases.</div></div>
+      <div class="policy-row"><div class="pdot d"></div><div><strong>Grandfathering:</strong> Rate locks in at arrangement start. A renewal = new arrangement, new rate.</div></div>
+    </div>
+
+  </div><!-- /input-stack -->
+
+  <!-- ╔═══════════ RIGHT: DASHBOARD ═══════════╗ -->
+  <div id="dashboard">
+
+    <!-- KPI Row — 6 tiles, 3 wide -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">FBT Status</div>
+        <div class="kpi-val green" id="kpiFbt">—</div>
+        <div class="kpi-sub" id="kpiFbtSub"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label" id="kpiPayLabel">Finance Payment</div>
+        <div class="kpi-val blue" id="kpiPayFinance">—</div>
+        <div class="kpi-sub" id="kpiPayFinanceSub">Pure lease repayment only</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label" id="kpiPayTotalLabel">Total Pre-Tax Deduction</div>
+        <div class="kpi-val blue" id="kpiPayTotal">—</div>
+        <div class="kpi-sub">Finance + running costs (pre-tax)</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label" id="kpiTakeHomeLabel">Take-Home Pay Impact</div>
+        <div class="kpi-val amber" id="kpiTakeHome">—</div>
+        <div class="kpi-sub" id="kpiTakeHomeSub">Actual reduction to net pay</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Marginal Tax Rate</div>
+        <div class="kpi-val amber" id="kpiMtr">—</div>
+        <div class="kpi-sub">Incl. Medicare if checked</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">GST Saving (Purchase)</div>
+        <div class="kpi-val green" id="kpiGst">—</div>
+        <div class="kpi-sub">Employer claims input tax credit (1/11)</div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alerts" id="alertsBox"></div>
+
+    <!-- Savings clarification note — always visible -->
+    <div id="savingsNote" class="savings-note" style="display:none"></div>
+
+    <!-- View Tabs -->
+    <div class="view-tabs screen-only">
+      <button class="view-tab active" id="tabA" onclick="switchView('single')">📋 My Lease (Option A)</button>
+      <button class="view-tab" id="tabB" onclick="switchView('compare')">⚖️ Compare Split Structure</button>
+    </div>
+
+    <!-- VIEW: SINGLE (Option A) -->
+    <div id="viewSingle">
+
+      <div class="option-card">
+        <div class="option-head">
+          <div>
+            <div class="option-title" id="optATitle">—</div>
+            <div class="option-sub" id="optADesc"></div>
+          </div>
+          <button class="export-btn screen-only" onclick="exportCSV('A')">⬇ CSV</button>
+        </div>
+
+        <!-- Residual -->
+        <div class="residual-section">
+          <div class="residual-eyebrow">Balloon Payment(s) Due at End of Lease</div>
+          <div class="residual-chips" id="residualChipsA"></div>
+          <p class="fnote" style="margin-top:6px">At lease end you owe this amount — options: pay cash, refinance, or trade in / return the vehicle.</p>
+        </div>
+
+        <!-- Summary KPIs — 4 columns with clear labels -->
+        <div class="opt-kpi-row" id="optKpiRowA">
+          <div class="opt-kpi">
+            <div class="opt-kpi-label">Total Savings</div>
+            <div class="opt-kpi-val green" id="optATotalSavings">—</div>
+            <div class="opt-kpi-note" id="optATotalNote"></div>
+          </div>
+          <div class="opt-kpi">
+            <div class="opt-kpi-label">Income Tax Saved</div>
+            <div class="opt-kpi-val green" id="optATaxSaved">—</div>
+            <div class="opt-kpi-note">From pre-tax salary sacrifice</div>
+          </div>
+          <div class="opt-kpi">
+            <div class="opt-kpi-label">ECM Post-Tax Total</div>
+            <div class="opt-kpi-val amber" id="optAEcm">—</div>
+            <div class="opt-kpi-note">Your post-tax contribution to eliminate employer FBT. $0 when fully exempt.</div>
+          </div>
+          <div class="opt-kpi">
+            <div class="opt-kpi-label">Net Benefit vs Cash</div>
+            <div class="opt-kpi-val" id="optANet">—</div>
+            <div class="opt-kpi-note">After interest &amp; ECM costs</div>
+          </div>
+        </div>
+
+        <!-- Ledger -->
+        <div class="ledger-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th id="ledgerColFinance">Finance Pymt</th>
+                <th id="ledgerColTotal">Total Pre-Tax</th>
+                <th id="ledgerColTakeHome">Take-Home Impact</th>
+                <th title="Employee Contribution Method — post-tax amount required to eliminate employer FBT when statutory rate > 0%">ECM Post-Tax/yr</th>
+                <th>FBT Status</th>
+                <th>Tax Saved/yr</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerA"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cost Breakdown -->
+      <div class="cost-bd">
+        <div class="cost-bd-head">📊 Is the lending cost eating your tax saving? (Option A)</div>
+        <div class="cost-bd-body" id="costBdBody"></div>
+      </div>
+
+    </div><!-- /viewSingle -->
+
+    <!-- VIEW: COMPARE -->
+    <div id="viewCompare" class="hidden">
+
+      <div class="compare-controls screen-only">
+        <label>Split structure:</label>
+        <select id="splitSelect" class="split-select" onchange="runEngine()"></select>
+        <span style="font-size:.7rem;color:var(--text-2);font-weight:300">Renewal = new arrangement; captures FBT rate at renewal date.</span>
+      </div>
+
+      <!-- For print: show currently selected split -->
+      <div id="splitDescPrint" style="display:none;margin-bottom:10px;font-size:.8rem;color:var(--text-2)"></div>
+
+      <!-- VERDICT FIRST -->
+      <div class="verdict-panel">
+        <div class="verdict-eyebrow">Δ Variance Analysis</div>
+        <div class="verdict-text" id="verdictText">Select a split structure above.</div>
+      </div>
+
+      <!-- Then the two scenario cards, stacked. JS fills scWinner then scLoser. -->
+      <div class="compare-grid" id="compareGrid">
+        <!-- filled by JS: winner card first, then loser card -->
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px" class="screen-only">
+        <button class="export-btn" onclick="exportCSV('both')">⬇ Export Both to CSV</button>
+      </div>
+
+    </div><!-- /viewCompare -->
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+      <strong>Disclaimer &amp; Sources</strong><br/>
+      General information only — not financial or tax advice. Always consult a registered tax agent.<br/><br/>
+      <strong>Sources:</strong> ATO FBTAA 1986 s.7 (statutory formula) · TD 93/142 (residual values) · Budget 2026-27 Paper No.2 — Electric Car Discount · ATO Income Tax Rates 2026-27 · AusTax.tools FBT Electric Car Discount Reform May 2026 · ATO Electric Cars Exemption.<br/><br/>
+      <strong>Key assumptions:</strong> FBT base = driveaway price incl. GST (ATO statutory formula). Stamp duty &amp; rego excluded. Running costs pre-tax when FBT-exempt. ECM post-tax = car base × statutory rate (zeros employer FBT). Residuals per TD 93/142 (8-yr effective life). Tax brackets 2026-27. Split renewal = new arrangement (ATO grandfathering). PHEV: exemption ended 1 Apr 2025. ICE/Petrol: full 20% statutory rate always. <strong>Total Savings = income tax saved + GST on vehicle + GST on running costs.</strong> Take-home pay impact = pre-tax deduction × (1 − marginal tax rate) + any ECM post-tax.
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /main-grid -->
+</div><!-- /page-wrap -->
+
+<!-- ══════════════════════════════════════════════════════
+     CALCULATION ENGINE v2.1
+══════════════════════════════════════════════════════ -->
+<script>
+/* ══ STATE ══ */
+let vehicleType        = 'ev';
+let payFreq            = 'fortnightly';
+let userEditedResidual = false;
+
+/* ══ POLICY DEFAULTS (2026 Budget) ══ */
+const SANDBOX_DEFAULTS = {
+  fbtCap:   75000,
+  lct:      91387,
+  phase2:  '2027-04-01',
+  phase3:  '2029-04-01',
+  postRate: 15,
+};
+
+/* ══ PAYMENT FREQUENCY ══ */
+const FREQ_DIV   = { weekly: 52/12, fortnightly: 26/12, monthly: 1 };
+const FREQ_LABEL = { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
+
+/* ══ ATO MINIMUM RESIDUALS — TD 93/142 (8-yr effective life) ══ */
+const ATO_RES = { 1: 0.6563, 2: 0.5625, 3: 0.4688, 4: 0.3750, 5: 0.2813 };
+
+
+/* ══ FORMATTING UTILS ══ */
+const fmtAUD = v => new Intl.NumberFormat('en-AU', {
+  style: 'currency', currency: 'AUD',
+  minimumFractionDigits: 0, maximumFractionDigits: 0,
+}).format(v);
+
+const fmtPct = v => (v * 100).toFixed(1) + '%';
+
+/** Convert a monthly amount to the currently selected pay frequency display amount. */
+function fmtP(monthlyAmt) {
+  return fmtAUD(monthlyAmt / (FREQ_DIV[payFreq] || 1));
+}
+
+/* ══ DATE UTILS ══ */
+function parseDate(s) {
+  if (!s) return new Date(0);
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+function addMonths(d, n) {
+  const r = new Date(d);
+  r.setUTCMonth(r.getUTCMonth() + n);
+  return r;
+}
+
+
+/* ══ TAX BRACKETS 2026-27 ══
+   $0–$18,200:        0%
+   $18,201–$45,000:  15%  (cut from 16% from 1 Jul 2026)
+   $45,001–$135,000: 30%
+   $135,001–$190,000: 37%
+   $190,001+:        45%
+   + 2% Medicare levy if applicable
+   Returns MARGINAL rate only (rate on the top dollar of income).
+*/
+function mRate(taxableIncome, medicare) {
+  let r = taxableIncome <= 18200  ? 0    :
+          taxableIncome <= 45000  ? 0.15 :
+          taxableIncome <= 135000 ? 0.30 :
+          taxableIncome <= 190000 ? 0.37 : 0.45;
+  return medicare ? r + 0.02 : r;
+}
+
+/* ══ PMT WITH BALLOON (correct finance formula) ══
+   P = principal (ex-GST)
+   r = APR / 12  (monthly rate)
+   n = term in months
+   RV = residual value (balloon)
+   Payment = (P − RV / (1+r)^n) × r / (1 − (1+r)^−n)
+*/
+function pmt(principal, annualApr, months, residualVal) {
+  if (months <= 0 || principal <= 0) return 0;
+  if (annualApr === 0) return (principal - residualVal) / months;
+  const r  = annualApr / 12;
+  const pv = Math.pow(1 + r, -months);
+  return (principal - residualVal * pv) * r / (1 - pv);
+}
+
+/* ══ FBT REGIME ══
+   Determines the statutory rate locked in at arrangement start.
+   ICE / PHEV: always 20%.
+   EV phase schedule:
+     Phase 1 (< phase2Date):
+       ≤ fbtCap           → 0%  (fully exempt)
+       fbtCap–lctThresh   → 20% (no discount in Phase 1)
+       > lctThresh        → 20% (ineligible)
+     Phase 2 (>= phase2Date, < phase3Date):
+       ≤ fbtCap           → 0%
+       fbtCap–lctThresh   → postRate (25% discount)
+       > lctThresh        → 20%
+     Phase 3 (>= phase3Date):
+       ≤ lctThresh        → postRate
+       > lctThresh        → 20%
+*/
+function getFbt(startDate, carPrice, vtype, fbtCap, lct, p2, p3, postRate) {
+  if (vtype === 'ice')  return { rate: 0.20, regime: 'full',    label: 'Full 20%',             desc: 'Petrol/diesel — full 20% statutory rate, ECM required' };
+  if (vtype === 'phev') return { rate: 0.20, regime: 'full',    label: 'Full 20%',             desc: 'PHEV — exemption ended 1 Apr 2025, full 20% rate applies' };
+  if (carPrice > lct)   return { rate: 0.20, regime: 'full',    label: 'Above LCT',            desc: `EV exceeds LCT (${fmtAUD(lct)}) — full 20%, no discount` };
+
+  if (startDate >= p3) return { rate: postRate, regime: 'partial', label: `Phase 3 — ${fmtPct(postRate)}`, desc: `Phase 3 — 25% FBT discount (${fmtPct(postRate)} statutory rate)` };
+
+  if (startDate >= p2) {
+    if (carPrice <= fbtCap) return { rate: 0, regime: 'exempt', label: 'Fully Exempt',        desc: `Phase 2 — under ${(fbtCap/1000).toFixed(0)}k cap, 0% statutory rate` };
+    return { rate: postRate, regime: 'partial', label: '25% Discount',                        desc: `Phase 2 — ${(fbtCap/1000).toFixed(0)}k–LCT band, 25% discount (${fmtPct(postRate)} stat. rate)` };
+  }
+
+  // Phase 1
+  if (carPrice <= fbtCap) return { rate: 0, regime: 'exempt',  label: 'Fully Exempt',         desc: `Phase 1 — under ${(fbtCap/1000).toFixed(0)}k cap, 0% statutory rate` };
+  return { rate: 0.20, regime: 'full', label: 'No Discount (Phase 1)',                        desc: `Phase 1 — ${(fbtCap/1000).toFixed(0)}k–LCT has NO discount before ${p2.toISOString().slice(0,10)}` };
+}
+
+/* ══ YEAR BLOCK ══
+   One year of cost/saving calculation.
+
+   Key values:
+     leasePmt      = monthly lease repayment (pure finance)
+     annualLease   = leasePmt × 12
+     annualRun     = annual running costs (packaged pre-tax)
+     preTaxAnnual  = annualLease + annualRun  (total salary sacrificed pre-tax)
+     ecm           = carPrice × fbtRate       (post-tax employee contribution to zero employer FBT)
+     taxSaved      = preTaxAnnual × mtr       (income tax saved)
+     gstRun        = annualRun / 11           (GST saving on running costs)
+     takeHomeImpact = (preTaxAnnual × (1 − mtr)) + ecm
+                   = the actual money less in your bank per year
+     Note: when fully exempt, ecm=0 so takeHomeImpact = preTaxAnnual × (1−mtr)
+*/
+function calcYear({ yearIndex, carPrice, annualRun, leasePmt, fbtRate, mtr, regime, arrLabel }) {
+  const annualLease    = leasePmt * 12;
+  const preTaxAnnual   = annualLease + annualRun;
+  const ecm            = carPrice * fbtRate;
+  const taxSaved       = preTaxAnnual * mtr;
+  const gstRun         = annualRun / 11;
+  const takeHomeImpact = (preTaxAnnual * (1 - mtr)) + ecm;
+  return { yearIndex, regime, arrLabel, leasePmt, annualLease, annualRun, preTaxAnnual, ecm, taxSaved, gstRun, takeHomeImpact };
+}
+
+/* ══ SCENARIO ENGINE ══
+   mode='continuous': single unbroken arrangement.
+   mode='split':      firstYears + (total−firstYears), two separate arrangements.
+
+   Residual logic (per TD 93/142):
+     Continuous: one balloon = carExGST × ATO_RES[totalTerm]
+     Split:
+       First balloon  = carExGST × ATO_RES[firstYears]   (due at renewal)
+       Second balloon = carExGST × ATO_RES[totalTerm]     (due at lease end)
+       Second principal = first balloon (refinancing the mid-term residual)
+*/
+function runScenario(inp, mode, firstYears) {
+  const { carPrice, annualApr, totalTerm, startDate, annualRun, mtr, vtype, fbtCap, lct, p2, p3, postRate } = inp;
+  const exGST   = carPrice / 1.1;
+  const gstSave = carPrice - exGST;
+  const years   = [];
+  let   residuals = [];
+
+  if (mode === 'continuous') {
+    const resPct = ATO_RES[totalTerm] ?? (0.75 - 0.75 / 8 * totalTerm);
+    const resVal = exGST * resPct;
+    const months = totalTerm * 12;
+    const p      = pmt(exGST, annualApr, months, resVal);
+    const fbt    = getFbt(startDate, carPrice, vtype, fbtCap, lct, p2, p3, postRate);
+    for (let y = 1; y <= totalTerm; y++) {
+      years.push(calcYear({ yearIndex: y, carPrice, annualRun, leasePmt: p, fbtRate: fbt.rate, mtr, regime: fbt.regime, arrLabel: 'Arrangement 1 (continuous)' }));
+    }
+    residuals = [{ label: `End of Yr ${totalTerm} (lease end)`, value: resVal, note: `${(resPct*100).toFixed(2)}% of ${fmtAUD(exGST)} (financed value)` }];
+
+  } else {
+    const secYears = totalTerm - firstYears;
+    const res1Pct  = ATO_RES[firstYears] ?? (0.75 - 0.75 / 8 * firstYears);
+    const res1Val  = exGST * res1Pct;
+    const months1  = firstYears * 12;
+    const p1       = pmt(exGST, annualApr, months1, res1Val);
+    const fbt1     = getFbt(startDate, carPrice, vtype, fbtCap, lct, p2, p3, postRate);
+    for (let y = 1; y <= firstYears; y++) {
+      years.push(calcYear({ yearIndex: y, carPrice, annualRun, leasePmt: p1, fbtRate: fbt1.rate, mtr, regime: fbt1.regime, arrLabel: `Arrangement 1 of 2 (${firstYears}yr)` }));
+    }
+
+    const renewDate = addMonths(startDate, firstYears * 12);
+    const res2Pct   = ATO_RES[totalTerm] ?? (0.75 - 0.75 / 8 * totalTerm);
+    const res2Val   = exGST * res2Pct;
+    const months2   = secYears * 12;
+    const p2v       = pmt(res1Val, annualApr, months2, res2Val); // principal = first balloon
+    const fbt2      = getFbt(renewDate, carPrice, vtype, fbtCap, lct, p2, p3, postRate);
+    for (let y = 1; y <= secYears; y++) {
+      years.push(calcYear({ yearIndex: firstYears + y, carPrice, annualRun, leasePmt: p2v, fbtRate: fbt2.rate, mtr, regime: fbt2.regime, arrLabel: `Arrangement 2 of 2 (${secYears}yr renewal)` }));
+    }
+
+    residuals = [
+      { label: `End of Yr ${firstYears} (mid-term balloon)`, value: res1Val, note: `${(res1Pct*100).toFixed(2)}% of ${fmtAUD(exGST)} — due at renewal` },
+      { label: `End of Yr ${totalTerm} (final balloon)`,      value: res2Val, note: `${(res2Pct*100).toFixed(2)}% of ${fmtAUD(exGST)} — due at lease end` },
+    ];
+  }
+
+  const T = years.reduce((a, y) => ({
+    preTax:    a.preTax    + y.preTaxAnnual,
+    ecm:       a.ecm       + y.ecm,
+    taxSaved:  a.taxSaved  + y.taxSaved,
+    gstRun:    a.gstRun    + y.gstRun,
+    takeHome:  a.takeHome  + y.takeHomeImpact,
+    leaseCost: a.leaseCost + y.annualLease,
+    runCost:   a.runCost   + y.annualRun,
+  }), { preTax: 0, ecm: 0, taxSaved: 0, gstRun: 0, takeHome: 0, leaseCost: 0, runCost: 0 });
+
+  T.totalSavings  = T.taxSaved + gstSave + T.gstRun;
+  T.gstSaveP      = gstSave;
+  T.firstLeasePmt = years[0].leasePmt;
+
+  return { years, totals: T, residuals };
+}
+
+/* ══ INPUT COLLECTOR ══ */
+function collectInp() {
+  const salary    = parseFloat(document.getElementById('salary').value)    || 0;
+  const otherSS   = parseFloat(document.getElementById('otherSS').value)   || 0;
+  const medicare  = document.getElementById('medicare').checked;
+  const carPrice  = parseFloat(document.getElementById('carPrice').value)  || 0;
+  const totalTerm = parseInt(document.getElementById('leaseTerm').value)   || 3;
+  const annualApr = (parseFloat(document.getElementById('apr').value) || 0) / 100;
+  const fbtCap    = parseFloat(document.getElementById('fbtCap').value)    || 75000;
+  const lct       = parseFloat(document.getElementById('lctThreshold').value) || 91387;
+  const postRate  = (parseFloat(document.getElementById('postRate').value) || 15) / 100;
+  const annualRun =
+    (parseFloat(document.getElementById('rcElec').value)      || 0) +
+    (parseFloat(document.getElementById('rcInsurance').value) || 0) +
+    (parseFloat(document.getElementById('rcRego').value)      || 0) +
+    (parseFloat(document.getElementById('rcService').value)   || 0) +
+    (parseFloat(document.getElementById('rcTyres').value)     || 0) +
+    (parseFloat(document.getElementById('rcRoadside').value)  || 0);
+
+  const taxableIncome = salary - otherSS * 12;
+  const mtr = mRate(taxableIncome, medicare);
+
+  return {
+    salary, otherSS, medicare, carPrice, totalTerm, annualApr,
+    fbtCap, lct, postRate, annualRun,
+    startDate: parseDate(document.getElementById('startDate').value),
+    p2:        parseDate(document.getElementById('phase2Date').value),
+    p3:        parseDate(document.getElementById('phase3Date').value),
+    taxableIncome, mtr, vtype: vehicleType,
+  };
+}
+
+
+/* ══ SANDBOX DEFAULTS CHECK ══ */
+function checkSandboxDefaults() {
+  const modified =
+    parseFloat(document.getElementById('fbtCap').value)        !== SANDBOX_DEFAULTS.fbtCap    ||
+    parseFloat(document.getElementById('lctThreshold').value)  !== SANDBOX_DEFAULTS.lct       ||
+    document.getElementById('phase2Date').value                !== SANDBOX_DEFAULTS.phase2    ||
+    document.getElementById('phase3Date').value                !== SANDBOX_DEFAULTS.phase3    ||
+    parseFloat(document.getElementById('postRate').value)      !== SANDBOX_DEFAULTS.postRate;
+  const badge = document.getElementById('sandboxModifiedBadge');
+  if (badge) badge.classList.toggle('hidden', !modified);
+}
+
+/* ══ PILL HTML ══ */
+function pill(regime) {
+  if (regime === 'exempt')  return `<span class="status-pill pill-exempt">Exempt 0%</span>`;
+  if (regime === 'partial') return `<span class="status-pill pill-partial">Partial 15%</span>`;
+  return `<span class="status-pill pill-exposed">Full 20%</span>`;
+}
+
+/* ══ RENDER RESIDUAL CHIPS ══ */
+function renderResiduals(id, residuals) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = residuals.map(r => `
+    <div class="residual-chip">
+      <div class="residual-chip-label">${r.label}</div>
+      <div class="residual-chip-val">${fmtAUD(r.value)}</div>
+      <div class="residual-chip-note">${r.note}</div>
+    </div>`).join('');
+}
+
+/* ══ RENDER LEDGER (Option A single view) ══ */
+function renderLedger(tbodyId, years) {
+  const freq = FREQ_LABEL[payFreq];
+  document.getElementById('ledgerColFinance').textContent  = `${freq} Finance`;
+  document.getElementById('ledgerColTotal').textContent    = `${freq} Total Pre-Tax`;
+  document.getElementById('ledgerColTakeHome').textContent = `${freq} Take-Home Impact`;
+
+  document.getElementById(tbodyId).innerHTML = years.map(y => {
+    const monthlyTotal = y.leasePmt + y.annualRun / 12;
+    const monthlyTH    = y.takeHomeImpact / 12;
+    return `<tr>
+      <td>Yr ${y.yearIndex}<br><span style="font-size:.62rem;color:var(--text-3);font-weight:300">${y.arrLabel}</span></td>
+      <td style="color:var(--blue)">${fmtP(y.leasePmt)}</td>
+      <td style="color:var(--blue)">${fmtP(monthlyTotal)}</td>
+      <td style="color:var(--warn)">${fmtP(monthlyTH)}</td>
+      <td style="color:${y.ecm > 0 ? 'var(--warn)' : 'var(--text-3)'}">${fmtAUD(y.ecm)}</td>
+      <td>${pill(y.regime)}</td>
+      <td style="color:var(--accent)">${fmtAUD(y.taxSaved)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ RENDER SCENARIO CARD (comparison view) ══ */
+function renderScenCard(id, result, label, colorClass, isWinner, subline) {
+  const { years, totals, residuals } = result;
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const resHTML = residuals.map(r => `
+    <div class="residual-chip">
+      <div class="residual-chip-label">${r.label}</div>
+      <div class="residual-chip-val">${fmtAUD(r.value)}</div>
+      <div class="residual-chip-note">${r.note}</div>
+    </div>`).join('');
+
+  const freq  = FREQ_LABEL[payFreq];
+  const tRows = years.map(y => {
+    const monthlyTotal = y.leasePmt + y.annualRun / 12;
+    const monthlyTH    = y.takeHomeImpact / 12;
+    return `<tr>
+      <td>Yr ${y.yearIndex}<br><span style="font-size:.6rem;color:var(--text-3);font-weight:300">${y.arrLabel}</span></td>
+      <td style="color:var(--blue)">${fmtP(y.leasePmt)}</td>
+      <td style="color:var(--blue)">${fmtP(monthlyTotal)}</td>
+      <td style="color:var(--warn)">${fmtP(monthlyTH)}</td>
+      <td style="color:${y.ecm > 0 ? 'var(--warn)' : 'var(--text-3)'}">${fmtAUD(y.ecm)}</td>
+      <td>${pill(y.regime)}</td>
+      <td style="color:var(--accent)">${fmtAUD(y.taxSaved)}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="scenario-card ${isWinner ? 'winner' : 'loser'}">
+      <div class="scenario-head">
+        <div>
+          <div class="sc-label ${colorClass}">${label}</div>
+          <div style="font-size:.7rem;color:var(--text-2);margin-top:2px">${subline}</div>
+        </div>
+        ${isWinner ? '<span class="winner-tag">⭐ Better option</span>' : ''}
+      </div>
+      <div class="sc-kpis">
+        <div>
+          <div class="sc-kpi-label">Total Savings</div>
+          <div class="sc-kpi-val accent">${fmtAUD(totals.totalSavings)}</div>
+          <div style="font-size:.6rem;color:var(--text-3);margin-top:1px">Tax + GST purchase + GST running</div>
+        </div>
+        <div>
+          <div class="sc-kpi-label">Income Tax Saved</div>
+          <div class="sc-kpi-val accent">${fmtAUD(totals.taxSaved)}</div>
+        </div>
+        <div>
+          <div class="sc-kpi-label">${freq} Finance (Yr 1)</div>
+          <div class="sc-kpi-val">${fmtP(years[0].leasePmt)}</div>
+        </div>
+        <div>
+          <div class="sc-kpi-label">ECM Post-Tax Total</div>
+          <div class="sc-kpi-val ${totals.ecm > 0 ? 'warn' : ''}">${fmtAUD(totals.ecm)}</div>
+        </div>
+      </div>
+      <div class="sc-residuals">${resHTML}</div>
+      <div class="ledger-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>${freq} Finance</th>
+              <th>${freq} Total Pre-Tax</th>
+              <th>${freq} Take-Home Impact</th>
+              <th>ECM/yr</th>
+              <th>FBT</th>
+              <th>Tax Saved/yr</th>
+            </tr>
+          </thead>
+          <tbody>${tRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ══ RENDER COST BREAKDOWN ══ */
+function renderCostBd(resultA, inp) {
+  const { totals, years } = resultA;
+  const body = document.getElementById('costBdBody');
+  if (!body) return;
+
+  const exGST      = inp.carPrice / 1.1;
+  const resPct     = ATO_RES[inp.totalTerm] ?? (0.75 - 0.75 / 8 * inp.totalTerm);
+  const resVal     = exGST * resPct;
+  const totalPmts  = years[0].leasePmt * 12 * inp.totalTerm;
+  const interest   = totalPmts - (exGST - resVal);
+  const net        = totals.totalSavings - Math.max(0, interest) - totals.ecm;
+  const isWorth    = net >= 0;
+
+  body.innerHTML = `
+    <div class="cost-row"><span class="cost-label">Income tax saved (${inp.totalTerm}yr)</span><span class="cost-val pos">+${fmtAUD(totals.taxSaved)}</span></div>
+    <div class="cost-row"><span class="cost-label">GST saving on vehicle purchase</span><span class="cost-val pos">+${fmtAUD(totals.gstSaveP)}</span></div>
+    <div class="cost-row"><span class="cost-label">GST saving on running costs (1/11 of running)</span><span class="cost-val pos">+${fmtAUD(totals.gstRun)}</span></div>
+    <div style="font-size:.69rem;color:var(--text-3);margin:-2px 0 2px;padding-left:2px">= Total Savings ${fmtAUD(totals.totalSavings)}</div>
+    <hr class="cost-div"/>
+    <div class="cost-row"><span class="cost-label">Finance interest cost (${fmtPct(inp.annualApr)} APR)</span><span class="cost-val neg">−${fmtAUD(Math.max(0, interest))}</span></div>
+    <div class="cost-row"><span class="cost-label">ECM post-tax contributions</span><span class="cost-val neg">−${fmtAUD(totals.ecm)}</span></div>
+    <hr class="cost-div"/>
+    <div class="cost-row cost-total">
+      <span class="cost-label">Net financial benefit vs. paying cash from after-tax income</span>
+      <span class="cost-val ${isWorth ? 'pos' : 'neg'}">${isWorth ? '+' : ''}${fmtAUD(net)}</span>
+    </div>
+    <div class="cost-note">
+      ${isWorth
+        ? `<span style="color:var(--accent)">✓ Tax and GST savings outweigh the lending cost.</span> At ${fmtPct(inp.annualApr)} APR the novated lease beats buying with after-tax cash by ${fmtAUD(net)}.`
+        : `<span style="color:var(--danger)">⚠ The lending cost + ECM exceed the tax saving.</span> At ${fmtPct(inp.annualApr)} APR, consider negotiating a lower rate — or switch to an EV to eliminate ECM.`
+      }${totals.ecm > 0 ? ` ECM post-tax of ${fmtAUD(totals.ecm)} is required because FBT applies.` : ''}
+    </div>`;
+}
+
+/* ══ RENDER ALERTS ══ */
+function renderAlerts(inp, fbt) {
+  const box  = document.getElementById('alertsBox');
+  const msgs = [];
+  if (inp.vtype === 'phev') msgs.push({ t: 'danger', h: `<b>⛔ PHEV — FBT exemption ended 1 April 2025.</b> PHEVs now attract the full 20% statutory rate. ECM post-tax contributions are required and reduce the overall benefit significantly.` });
+  if (inp.vtype === 'ice')  msgs.push({ t: 'info',   h: `<b>ℹ Petrol/Diesel — full 20% FBT statutory rate.</b> ECM post-tax contributions are required to zero out employer FBT. Tax savings still exist from salary sacrifice but are partially offset.` });
+  if (inp.vtype === 'ev' && inp.carPrice > inp.lct)
+    msgs.push({ t: 'danger', h: `<b>⛔ EV exceeds LCT threshold (${fmtAUD(inp.lct)}).</b> Not eligible for any FBT discount. Full 20% applies — ECM required.` });
+  else if (inp.vtype === 'ev' && inp.carPrice > inp.fbtCap && inp.startDate < inp.p2)
+    msgs.push({ t: 'danger', h: `<b>⚠ EV in ${(inp.fbtCap/1000).toFixed(0)}k–LCT band before 1 Apr 2027.</b> No FBT discount exists for this band in Phase 1. Waiting until 1 Apr 2027 would unlock the 25% Phase 2 discount.` });
+  else if (inp.vtype === 'ev' && inp.carPrice > inp.fbtCap)
+    msgs.push({ t: 'warn',   h: `<b>⚠ EV above ${(inp.fbtCap/1000).toFixed(0)}k cap.</b> From 1 Apr 2027 this vehicle qualifies for a 25% FBT discount (${fmtPct(inp.postRate)} statutory rate). ECM contributions still required.` });
+
+  box.style.display = msgs.length ? 'flex' : 'none';
+  box.innerHTML = msgs.map(m => `<div class="alert ${m.t}">${m.h}</div>`).join('');
+}
+
+/* ══ RENDER SAVINGS CLARIFICATION NOTE ══ */
+function renderSavingsNote(inp, totals) {
+  const el = document.getElementById('savingsNote');
+  el.style.display = 'block';
+  el.innerHTML = `<strong style="color:var(--accent)">How Total Savings is calculated:</strong>
+    Income tax saved (${fmtAUD(totals.taxSaved)}) + GST saving on vehicle purchase (${fmtAUD(totals.gstSaveP)}) + GST saving on running costs (${fmtAUD(totals.gstRun)}) = <strong>${fmtAUD(totals.totalSavings)}</strong>. &nbsp;·&nbsp;
+    The "take-home pay impact" shows how much less you receive each ${FREQ_LABEL[payFreq].toLowerCase()} — it equals the pre-tax deduction after your income tax saving, ${totals.ecm > 0 ? 'plus the ECM post-tax contribution.' : 'with no ECM (fully FBT-exempt).'}`;
+}
+
+/* ══ RENDER VERDICT ══ */
+function renderVerdict(rA, rB, firstYrs, secYrs) {
+  const el    = document.getElementById('verdictText');
+  const delta = Math.abs(rA.totals.totalSavings - rB.totals.totalSavings);
+  const diff  = rA.years[0].regime !== rB.years.find(y => y.arrLabel.includes('2 of 2'))?.regime;
+  if (delta < 50) {
+    el.innerHTML = `<strong>⚖ Near-equivalent.</strong> Both structures produce almost the same result (Δ < $50). The continuous lease is simpler — one application, one set of establishment fees, no mid-term residual to refinance.`;
+    return;
+  }
+  if (rA.totals.totalSavings > rB.totals.totalSavings) {
+    el.innerHTML = `<span class="green"><strong>Option A (${rA.years.length}yr continuous)</strong></span> saves <strong>${fmtAUD(delta)}</strong> more than the ${firstYrs}+${secYrs}yr split.`
+      + (diff ? ` The renewal falls into a different (worse) FBT phase, increasing ECM post-tax costs.` : ` Both arrangements land in the same FBT phase; the advantage is structural — avoiding a second set of finance fees and mid-term residual refinancing.`);
+  } else {
+    el.innerHTML = `<span class="amber"><strong>Option B (${firstYrs}yr + ${secYrs}yr split)</strong></span> saves <strong>${fmtAUD(delta)}</strong> more. This typically occurs when the renewal date lands in a more favourable policy phase. Verify the renewal FBT regime applies as expected.`;
+  }
+}
+
+/* ══ UPDATE SPLIT DROPDOWN ══ */
+function updateSplitOpts(totalTerm) {
+  const sel  = document.getElementById('splitSelect');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  if (totalTerm <= 1) {
+    sel.innerHTML = '<option value="na" disabled>N/A — 1yr cannot be split</option>';
+    return;
+  }
+  for (let f = 1; f < totalTerm; f++) {
+    const opt = document.createElement('option');
+    opt.value       = `${f}+${totalTerm - f}`;
+    opt.textContent = `${f} yr + ${totalTerm - f} yr`;
+    sel.appendChild(opt);
+  }
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+
+/* ══ PDF GENERATION — programmatic, clean, portrait A4 ══
+   Order: Config summary → KPI snapshot → Option A full →
+          Cost breakdown → [if split selected] Variance
+          analysis → Winner → Loser → Disclaimer
+*/
+function generatePDF() {
+  const btn = document.getElementById('pdfBtn');
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+  // Small delay so the browser can repaint the button state
+  setTimeout(() => {
+    try { _buildPDF(); }
+    catch (e) { console.error(e); }
+    finally {
+      btn.textContent = '⬇ Download PDF Report';
+      btn.disabled = false;
+    }
+  }, 60);
+}
+
+function _buildPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const PW = 210, PH = 297;  // A4 portrait
+  const ML = 14, MR = 14;    // left/right margins
+  const CW = PW - ML - MR;   // content width = 182mm
+  let y = 0;                  // current Y cursor
+
+  // Colour palette (dark theme approximated in print colours)
+  const C = {
+    bg:      [13,  15,  20 ],
+    surface: [19,  22,  29 ],
+    raised:  [26,  30,  40 ],
+    border:  [37,  42,  56 ],
+    text:    [232, 236, 244],
+    text2:   [139, 145, 168],
+    text3:   [85,  92,  117],
+    accent:  [74,  222, 128],
+    warn:    [251, 191, 36 ],
+    danger:  [248, 113, 113],
+    blue:    [96,  165, 250],
+    white:   [255, 255, 255],
+  };
+
+  const inp      = collectInp();
+  const rA       = runScenario(inp, 'continuous', null);
+  const splitVal = document.getElementById('splitSelect').value || '';
+  const hasSplit = splitVal && splitVal !== 'na';
+  const firstYrs = hasSplit ? parseInt(splitVal.split('+')[0]) : null;
+  const rB       = hasSplit ? runScenario(inp, 'split', firstYrs) : null;
+  const fbt      = getFbt(inp.startDate, inp.carPrice, inp.vtype, inp.fbtCap, inp.lct, inp.p2, inp.p3, inp.postRate);
+  const freq     = FREQ_LABEL[payFreq];
+  const startStr = inp.startDate.toLocaleDateString('en-AU');
+  const endStr   = addMonths(inp.startDate, inp.totalTerm * 12).toLocaleDateString('en-AU');
+
+  // ── Inner helpers ──
+
+  function newPage() {
+    doc.addPage();
+    y = 14;
+    doc.setFontSize(7); doc.setTextColor(...C.text3);
+    doc.text('Novated Lease Calculator — Australia 2026', ML, 8);
+    doc.text(`Generated ${new Date().toLocaleDateString('en-AU')}`, PW - MR, 8, { align: 'right' });
+    doc.setDrawColor(...C.border); doc.setLineWidth(0.2);
+    doc.line(ML, 10, PW - MR, 10);
+  }
+
+  function checkY(needed) {
+    if (y + needed > PH - 14) newPage();
+  }
+
+  function sectionHeading(title) {
+    checkY(12);
+    doc.setFillColor(...C.raised);
+    doc.roundedRect(ML, y, CW, 8, 1, 1, 'F');
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...C.accent);
+    doc.text(title, ML + 4, y + 5.5);
+    y += 11;
+  }
+
+  function kpiRow(items) {
+    const n = items.length;
+    const w = CW / n;
+    checkY(18);
+    items.forEach((item, i) => {
+      const x = ML + i * w;
+      doc.setFillColor(...C.surface);
+      doc.roundedRect(x, y, w - 2, 16, 1, 1, 'F');
+      doc.setDrawColor(...C.border); doc.setLineWidth(0.2);
+      doc.roundedRect(x, y, w - 2, 16, 1, 1, 'S');
+      doc.setFontSize(6); doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...C.text3);
+      doc.text(item.label.toUpperCase(), x + 3, y + 4.5);
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...(item.color || C.accent));
+      doc.text(item.value, x + 3, y + 11);
+      if (item.sub) {
+        doc.setFontSize(5.5); doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...C.text3);
+        doc.text(item.sub, x + 3, y + 14.5, { maxWidth: w - 5 });
+      }
+    });
+    y += 19;
+  }
+
+  function residualChips(residuals) {
+    if (!residuals.length) return;
+    checkY(14);
+    doc.setFontSize(6.5); doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...C.text3);
+    doc.text('BALLOON PAYMENT(S) DUE AT END OF LEASE', ML, y);
+    y += 3;
+    const w = CW / residuals.length;
+    residuals.forEach((r, i) => {
+      const x = ML + i * w;
+      doc.setFillColor(...C.raised);
+      doc.roundedRect(x, y, w - 3, 12, 1, 1, 'F');
+      doc.setFontSize(5.5); doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...C.text3);
+      doc.text(r.label.toUpperCase(), x + 3, y + 4);
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...C.warn);
+      doc.text(fmtAUD(r.value), x + 3, y + 9);
+    });
+    y += 15;
+  }
+
+  function ledgerTable(years) {
+    const tableData = years.map(yr => [
+      `Yr ${yr.yearIndex}\n${yr.arrLabel}`,
+      fmtP(yr.leasePmt),
+      fmtP(yr.leasePmt + yr.annualRun / 12),
+      fmtP(yr.takeHomeImpact / 12),
+      fmtAUD(yr.ecm),
+      yr.regime === 'exempt' ? 'Exempt 0%' : yr.regime === 'partial' ? 'Partial 15%' : 'Full 20%',
+      fmtAUD(yr.taxSaved),
+    ]);
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: ML, right: MR },
+      head: [[
+        'Year',
+        `${freq} Finance`,
+        `${freq} Total`,
+        `${freq} Take-Home Impact`,
+        'ECM Post-Tax/yr',
+        'FBT Status',
+        'Tax Saved/yr',
+      ]],
+      body: tableData,
+      styles: {
+        fontSize: 7.5, font: 'helvetica', cellPadding: 2.5,
+        overflow: 'linebreak', fillColor: C.surface,
+        textColor: C.text2, lineColor: C.border, lineWidth: 0.2,
+      },
+      headStyles: { fillColor: C.raised, textColor: C.text3, fontSize: 6.5, fontStyle: 'bold', halign: 'left' },
+      columnStyles: {
+        0: { cellWidth: 28, textColor: C.text },
+        1: { cellWidth: 24, textColor: C.blue,   halign: 'right' },
+        2: { cellWidth: 24, textColor: C.blue,   halign: 'right' },
+        3: { cellWidth: 28, textColor: C.warn,   halign: 'right' },
+        4: { cellWidth: 26,                      halign: 'right' },
+        5: { cellWidth: 22,                      halign: 'center' },
+        6: { cellWidth: 30, textColor: C.accent, halign: 'right' },
+      },
+      alternateRowStyles: { fillColor: C.bg },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 5) {
+          const v = data.cell.raw;
+          if (v === 'Exempt 0%')   data.cell.styles.textColor = C.accent;
+          else if (v === 'Partial 15%') data.cell.styles.textColor = C.warn;
+          else                     data.cell.styles.textColor = C.danger;
+        }
+      },
+      theme: 'grid',
+    });
+    y = doc.lastAutoTable.finalY + 5;
+  }
+
+  function summaryKpiBar(totals, years) {
+    const exGST    = inp.carPrice / 1.1;
+    const resPct   = ATO_RES[inp.totalTerm] ?? (0.75 - 0.75 / 8 * inp.totalTerm);
+    const interest = years[0].leasePmt * 12 * inp.totalTerm - (exGST - exGST * resPct);
+    const net      = totals.totalSavings - Math.max(0, interest) - totals.ecm;
+    kpiRow([
+      { label: 'Total Savings',       value: fmtAUD(totals.totalSavings), sub: 'Tax + GST purchase + GST running', color: C.accent },
+      { label: 'Income Tax Saved',    value: fmtAUD(totals.taxSaved),     sub: 'From pre-tax sacrifice',           color: C.accent },
+      { label: 'ECM Post-Tax Total',  value: fmtAUD(totals.ecm),          sub: 'Required when FBT applies',        color: totals.ecm > 0 ? C.warn : C.text3 },
+      { label: 'Net Benefit vs Cash', value: fmtAUD(net),                 sub: 'After interest & ECM costs',       color: net >= 0 ? C.accent : C.danger },
+    ]);
+  }
+
+  function costBreakdownTable(result) {
+    const { totals, years } = result;
+    const exGST    = inp.carPrice / 1.1;
+    const resPct   = ATO_RES[inp.totalTerm] ?? (0.75 - 0.75 / 8 * inp.totalTerm);
+    const resVal   = exGST * resPct;
+    const interest = years[0].leasePmt * 12 * inp.totalTerm - (exGST - resVal);
+    const net      = totals.totalSavings - Math.max(0, interest) - totals.ecm;
+    const isWorth  = net >= 0;
+
+    const rows = [
+      ['Income tax saved',               fmtAUD(totals.taxSaved),          'SAVING'  ],
+      ['GST saving on vehicle purchase', fmtAUD(totals.gstSaveP),          'SAVING'  ],
+      ['GST saving on running costs',    fmtAUD(totals.gstRun),            'SAVING'  ],
+      ['Finance interest cost',          `−${fmtAUD(Math.max(0,interest))}`,'COST'   ],
+      ['ECM post-tax contributions',     `−${fmtAUD(totals.ecm)}`,         'COST'    ],
+      ['Net financial benefit vs cash',  fmtAUD(net),                      isWorth ? 'POSITIVE' : 'NEGATIVE'],
+    ];
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: ML, right: MR },
+      head: [['Item', 'Amount', '']],
+      body: rows,
+      styles: { fontSize: 8, font: 'helvetica', cellPadding: 2.5, fillColor: C.surface, textColor: C.text2, lineColor: C.border, lineWidth: 0.2 },
+      headStyles: { fillColor: C.raised, textColor: C.text3, fontSize: 7, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 120 },
+        1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' },
+        2: { cellWidth: 22, halign: 'center' },
+      },
+      didParseCell: (data) => {
+        if (data.section === 'body') {
+          const tag = data.row.raw[2];
+          if (data.column.index === 1) {
+            if (tag === 'SAVING')    data.cell.styles.textColor = C.accent;
+            else if (tag === 'COST') data.cell.styles.textColor = C.danger;
+            else if (tag === 'POSITIVE') { data.cell.styles.textColor = C.accent; data.cell.styles.fontSize = 9; }
+            else { data.cell.styles.textColor = C.danger; data.cell.styles.fontSize = 9; }
+          }
+          if (data.column.index === 2) data.cell.styles.textColor = C.text3;
+          if (data.row.index === 3 || data.row.index === 5) {
+            data.cell.styles.lineWidths = { top: 0.5 };
+            data.cell.styles.lineColor = C.border;
+          }
+        }
+      },
+      theme: 'grid',
+    });
+    y = doc.lastAutoTable.finalY + 5;
+  }
+
+  function verdictBlock(rA, rB, firstYrs, secYrs) {
+    const delta = Math.abs(rA.totals.totalSavings - rB.totals.totalSavings);
+    const aWins = rA.totals.totalSavings >= rB.totals.totalSavings;
+    const diff  = rA.years[0].regime !== rB.years.find(yr => yr.arrLabel.includes('2 of 2'))?.regime;
+
+    let text;
+    if (delta < 50) {
+      text = 'Both structures produce nearly identical total savings (difference < $50). The continuous lease is simpler — one application, one set of establishment fees, no mid-term residual refinancing.';
+    } else if (aWins) {
+      text = `Option A (${rA.years.length}yr continuous) saves ${fmtAUD(delta)} more than the ${firstYrs}+${secYrs}yr split.`
+           + (diff ? ' The renewal falls into a different (worse) FBT phase, increasing ECM post-tax costs.'
+                   : ' Both arrangements land in the same FBT phase; the advantage is structural — one set of finance fees, no mid-term residual refinancing.');
+    } else {
+      text = `Option B (${firstYrs}yr + ${secYrs}yr split) saves ${fmtAUD(delta)} more. This typically occurs when the renewal date lands in a more favourable policy phase. Verify the renewal FBT regime applies as expected.`;
+    }
+
+    checkY(20);
+    doc.setFillColor(...C.raised);
+    doc.roundedRect(ML, y, CW, 16, 1.5, 1.5, 'F');
+    doc.setFontSize(6); doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...C.text3);
+    doc.text('Δ VARIANCE ANALYSIS', ML + 4, y + 5);
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...C.text2);
+    const lines = doc.splitTextToSize(text, CW - 8);
+    doc.text(lines, ML + 4, y + 10);
+    y += Math.max(18, 8 + lines.length * 4);
+  }
+
+  // ═══════════════════════════════════════
+  // PAGE 1 — Header + Config + KPI summary
+  // ═══════════════════════════════════════
+  doc.setFillColor(...C.bg);
+  doc.rect(0, 0, PW, PH, 'F');
+
+  y = 14;
+  doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...C.text);
+  doc.text('Novated Lease Calculator', ML, y);
+  y += 7;
+  doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...C.text2);
+  doc.text('Australia 2026  ·  ATO Compliant  ·  General information only — not financial advice', ML, y);
+  y += 4;
+  doc.setDrawColor(...C.border); doc.setLineWidth(0.3);
+  doc.line(ML, y, PW - MR, y);
+  y += 7;
+
+  sectionHeading('Configuration Summary');
+  const vtypeStr = inp.vtype === 'ev' ? 'Electric BEV' : inp.vtype === 'phev' ? 'Plug-in Hybrid' : 'Petrol/Diesel';
+  const configRows = [
+    ['Vehicle Type',   vtypeStr,                    'Gross Salary',          fmtAUD(inp.salary)      ],
+    ['Driveaway Price', fmtAUD(inp.carPrice),        'Taxable Income',        fmtAUD(inp.taxableIncome)],
+    ['Lease Term',     `${inp.totalTerm} years`,     'Marginal Tax Rate',     fmtPct(inp.mtr)         ],
+    ['Lease Start',    startStr,                     'Finance APR',           fmtPct(inp.annualApr)   ],
+    ['FBT Status',     fbt.label,                   'Annual Running',         fmtAUD(inp.annualRun)   ],
+    ['LCT Threshold',  fmtAUD(inp.lct),             'FBT Cap (full exempt)', fmtAUD(inp.fbtCap)      ],
+  ];
+  doc.autoTable({
+    startY: y,
+    margin: { left: ML, right: MR },
+    body: configRows,
+    styles: { fontSize: 8, font: 'helvetica', cellPadding: 2.5, fillColor: C.surface, textColor: C.text, lineColor: C.border, lineWidth: 0.2 },
+    columnStyles: {
+      0: { textColor: C.text3, fontStyle: 'bold', cellWidth: 38 },
+      1: { cellWidth: 52, fontStyle: 'bold' },
+      2: { textColor: C.text3, fontStyle: 'bold', cellWidth: 38 },
+      3: { cellWidth: 54, fontStyle: 'bold' },
+    },
+    theme: 'grid',
+    alternateRowStyles: { fillColor: C.raised },
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  sectionHeading('Key Metrics Snapshot');
+  const thMonthly = rA.years[0].takeHomeImpact / 12;
+  kpiRow([
+    { label: 'FBT Status',              value: fbt.label,                                              sub: fbt.desc.substring(0, 40) + '…', color: fbt.regime === 'exempt' ? C.accent : fbt.regime === 'partial' ? C.warn : C.danger },
+    { label: `${freq} Finance Payment`, value: fmtP(rA.years[0].leasePmt),                            sub: 'Pure lease repayment (ex-running)', color: C.blue  },
+    { label: `${freq} Pre-Tax Total`,   value: fmtP(rA.years[0].leasePmt + inp.annualRun / 12),        sub: 'Finance + running costs',          color: C.blue  },
+    { label: `${freq} Take-Home Impact`,value: fmtP(thMonthly),                                        sub: 'Actual reduction to net pay',      color: C.warn  },
+  ]);
+  kpiRow([
+    { label: 'Total Savings',         value: fmtAUD(rA.totals.totalSavings), sub: `Tax ${fmtAUD(rA.totals.taxSaved)} + GST purchase ${fmtAUD(rA.totals.gstSaveP)} + GST running ${fmtAUD(rA.totals.gstRun)}`, color: C.accent },
+    { label: 'Income Tax Saved',      value: fmtAUD(rA.totals.taxSaved),     sub: 'From pre-tax salary sacrifice', color: C.accent },
+    { label: 'GST Saving (Purchase)', value: fmtAUD(inp.carPrice - inp.carPrice / 1.1), sub: 'Employer claims input tax credit', color: C.accent },
+    { label: 'Marginal Tax Rate',     value: fmtPct(inp.mtr),                sub: 'Incl. Medicare if applicable', color: C.warn },
+  ]);
+
+  // ═══════════════════════════════════════
+  // OPTION A — Full Continuous Lease
+  // ═══════════════════════════════════════
+  newPage();
+  sectionHeading(`Option A — ${inp.totalTerm}-Year Continuous Lease`);
+  doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...C.text2);
+  doc.text(`${startStr} → ${endStr}  ·  ${fmtPct(inp.annualApr)} APR  ·  Arrangement 1 of 1 (unbroken)`, ML, y);
+  y += 7;
+
+  residualChips(rA.residuals);
+  summaryKpiBar(rA.totals, rA.years);
+  ledgerTable(rA.years);
+
+  sectionHeading('Is the Lending Cost Eating Your Tax Saving?');
+  costBreakdownTable(rA);
+
+  // ═══════════════════════════════════════
+  // OPTION B — Split Lease (if selected)
+  // ═══════════════════════════════════════
+  if (hasSplit && rB) {
+    const secYrs   = inp.totalTerm - firstYrs;
+    const aWins    = rA.totals.totalSavings >= rB.totals.totalSavings;
+    const renewStr = addMonths(inp.startDate, firstYrs * 12).toLocaleDateString('en-AU');
+
+    newPage();
+    sectionHeading(`Split Lease Comparison — ${firstYrs}yr + ${secYrs}yr Structure`);
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...C.text2);
+    doc.text(`Split: Arrangement 1 starts ${startStr} · Renewal (new arrangement) on ${renewStr}`, ML, y);
+    y += 4;
+    doc.setFontSize(7.5); doc.setTextColor(...C.warn);
+    doc.text('A renewal is a new arrangement — it captures the FBT rate active at the renewal date (no grandfathering from the original start).', ML, y, { maxWidth: CW });
+    y += 8;
+
+    verdictBlock(rA, rB, firstYrs, secYrs);
+    y += 2;
+
+    const winner = aWins
+      ? { result: rA, label: `Option A — ${inp.totalTerm}yr Continuous (BETTER OPTION)` }
+      : { result: rB, label: `Option B — ${firstYrs}yr + ${secYrs}yr Split (BETTER OPTION)` };
+    const loser  = aWins
+      ? { result: rB, label: `Option B — ${firstYrs}yr + ${secYrs}yr Split` }
+      : { result: rA, label: `Option A — ${inp.totalTerm}yr Continuous` };
+
+    checkY(10);
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...C.accent);
+    doc.text(winner.label, ML, y);
+    y += 6;
+    residualChips(winner.result.residuals);
+    summaryKpiBar(winner.result.totals, winner.result.years);
+    ledgerTable(winner.result.years);
+
+    checkY(10);
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...C.text2);
+    doc.text(loser.label, ML, y);
+    y += 6;
+    residualChips(loser.result.residuals);
+    summaryKpiBar(loser.result.totals, loser.result.years);
+    ledgerTable(loser.result.years);
+  }
+
+  // ═══════════════════════════════════════
+  // DISCLAIMER (always last)
+  // ═══════════════════════════════════════
+  checkY(35);
+  doc.setFontSize(6.5); doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...C.text3);
+  doc.text('Disclaimer & Sources', ML, y); y += 4;
+  doc.setFont('helvetica', 'normal');
+  const disclaimer = `General information only — not financial or tax advice. Always consult a registered tax agent.\n\nSources: ATO FBTAA 1986 s.7 (statutory formula) · TD 93/142 (residual values) · Budget 2026-27 Paper No.2 — Electric Car Discount · ATO Income Tax Rates 2026-27 · AusTax.tools FBT Electric Car Discount Reform May 2026.\n\nKey assumptions: FBT base = driveaway price incl. GST. Stamp duty & rego excluded. Running costs pre-tax when FBT-exempt. ECM post-tax = car base × statutory rate. Residuals per TD 93/142 (8-yr effective life). Tax brackets: 2026-27 legislated rates. Split renewal = new arrangement. PHEV: exemption ended 1 Apr 2025. Total Savings = income tax saved + GST on vehicle + GST on running costs. Take-home impact = pre-tax deduction × (1 − MTR) + ECM.`;
+  const dLines = doc.splitTextToSize(disclaimer, CW);
+  doc.setTextColor(...C.text3);
+  doc.text(dLines, ML, y);
+
+  // Save
+  const dateStr = inp.startDate.toISOString().slice(0, 10);
+  doc.save(`Novated_Lease_Report_${dateStr}.pdf`);
+}
+
+
+/* ══ CSV EXPORT ══ */
+function exportCSV(mode) {
+  const inp      = collectInp();
+  const rA       = runScenario(inp, 'continuous', null);
+  const splitVal = document.getElementById('splitSelect').value || '';
+  const firstY   = splitVal && splitVal !== 'na' ? parseInt(splitVal.split('+')[0]) : null;
+  const rB       = firstY ? runScenario(inp, 'split', firstY) : null;
+
+  const header = [
+    'Scenario', 'Year', 'Arrangement',
+    'Finance Pmt/mo ($)', 'Annual Lease ($)', 'Annual Running ($)',
+    'Pre-Tax/yr ($)', 'Take-Home Impact/yr ($)', 'ECM Post-Tax/yr ($)',
+    'FBT Regime', 'Tax Saved/yr ($)',
+  ].join(',');
+
+  const rows = [];
+  const addR = (label, r) => {
+    r.years.forEach(y => rows.push([
+      label, y.yearIndex, `"${y.arrLabel}"`,
+      y.leasePmt.toFixed(2), y.annualLease.toFixed(2), y.annualRun.toFixed(2),
+      y.preTaxAnnual.toFixed(2), y.takeHomeImpact.toFixed(2), y.ecm.toFixed(2),
+      y.regime, y.taxSaved.toFixed(2),
+    ].join(',')));
+    const t = r.totals;
+    rows.push([
+      `${label} TOTALS`, '', '',
+      '', t.leaseCost.toFixed(2), t.runCost.toFixed(2),
+      t.preTax.toFixed(2), t.takeHome.toFixed(2), t.ecm.toFixed(2),
+      '', t.taxSaved.toFixed(2),
+    ].join(','));
+    rows.push('');
+  };
+
+  addR(`Option A (${inp.totalTerm}yr continuous)`, rA);
+  if (rB && mode !== 'A') addR(`Option B (${splitVal} split)`, rB);
+
+  const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `novated_lease_${inp.startDate.toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+/* ══ VIEW SWITCHING ══ */
+function switchView(view) {
+  document.getElementById('viewSingle').classList.toggle('hidden', view !== 'single');
+  document.getElementById('viewCompare').classList.toggle('hidden', view !== 'compare');
+  document.getElementById('tabA').classList.toggle('active', view === 'single');
+  document.getElementById('tabB').classList.toggle('active', view === 'compare');
+}
+
+/* ══ PAYMENT FREQUENCY ══ */
+function setFreq(freq) {
+  payFreq = freq;
+  ['weekly', 'fortnightly', 'monthly'].forEach(f =>
+    document.getElementById(`freq-${f}`).classList.toggle('active', f === freq)
+  );
+  runEngine();
+}
+
+/* ══ VEHICLE TYPE ══ */
+function setVehicleType(vtype) {
+  vehicleType = vtype;
+  const styles = { ev: 'vt-ev', phev: 'vt-phev', ice: 'vt-ice' };
+  ['ev', 'phev', 'ice'].forEach(t => {
+    const btn = document.getElementById(`vt-${t}`);
+    btn.className = 'vtype-btn' + (t === vtype ? ` ${styles[t]}` : '');
+  });
+  const lbl  = document.getElementById('fuelLabel');
+  const note = document.getElementById('vtypeNote');
+  if (vtype === 'ev') {
+    lbl.textContent  = 'Electricity / Charging ($)';
+    note.textContent = 'BEVs & hydrogen fuel-cell vehicles: eligible for FBT exemption under the 2026 Budget phase schedule.';
+    note.style.color = '';
+  } else {
+    lbl.textContent  = 'Fuel ($)';
+    note.textContent = vtype === 'phev'
+      ? 'PHEVs lost the FBT exemption on 1 April 2025 and now attract the full 20% statutory rate (ECM required).'
+      : 'Petrol/diesel vehicles always attract the full 20% FBT statutory rate. ECM post-tax contributions are required.';
+    note.style.color = 'var(--danger)';
+  }
+  runEngine();
+}
+
+/* ══ THEME ══ */
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  const icon = document.getElementById('themeIcon');
+  const lbl  = document.getElementById('themeLabel');
+  if (theme === 'light') {
+    icon.textContent = '🌙';
+    lbl.textContent  = 'Dark mode';
+  } else {
+    icon.textContent = '☀️';
+    lbl.textContent  = 'Light mode';
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next    = current === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  localStorage.setItem('theme', next);
+}
+
+
+/* ══ MAIN ENGINE ══ */
+function runEngine() {
+  const inp = collectInp();
+
+  checkSandboxDefaults();
+
+  const alertsBox = document.getElementById('alertsBox');
+  if (!inp.carPrice || inp.carPrice < 1000) {
+    alertsBox.style.display = 'flex';
+    alertsBox.innerHTML = `<div class="alert warn"><b>⚠ Enter a valid driveaway price</b> (at least $1,000) to see your lease calculations.</div>`;
+    return;
+  }
+  if (!inp.salary || inp.salary < 1) {
+    alertsBox.style.display = 'flex';
+    alertsBox.innerHTML = `<div class="alert warn"><b>⚠ Enter a gross annual salary</b> to calculate your marginal tax rate and savings.</div>`;
+    return;
+  }
+
+  updateSplitOpts(inp.totalTerm);
+
+  const fbt     = getFbt(inp.startDate, inp.carPrice, inp.vtype, inp.fbtCap, inp.lct, inp.p2, inp.p3, inp.postRate);
+  const resultA = runScenario(inp, 'continuous', null);
+  const { totals: tA, years: yA } = resultA;
+
+  // ── KPIs ──
+  const fbtColors = { exempt: 'green', partial: 'amber', full: 'danger' };
+  document.getElementById('kpiFbt').textContent    = fbt.label;
+  document.getElementById('kpiFbt').className      = `kpi-val ${fbtColors[fbt.regime] || 'danger'}`;
+  document.getElementById('kpiFbtSub').textContent = fbt.desc;
+
+  const freqLabel = FREQ_LABEL[payFreq];
+  document.getElementById('kpiPayLabel').textContent      = `${freqLabel} Finance Pymt`;
+  document.getElementById('kpiPayFinance').textContent    = fmtP(yA[0].leasePmt);
+  document.getElementById('kpiPayFinanceSub').textContent = 'Pure lease repayment (ex-running costs)';
+
+  const totalMonthly = yA[0].leasePmt + inp.annualRun / 12;
+  document.getElementById('kpiPayTotalLabel').textContent = `${freqLabel} Pre-Tax Total`;
+  document.getElementById('kpiPayTotal').textContent      = fmtP(totalMonthly);
+
+  const thMonthly = yA[0].takeHomeImpact / 12;
+  document.getElementById('kpiTakeHomeLabel').textContent = `${freqLabel} Take-Home Impact`;
+  document.getElementById('kpiTakeHome').textContent      = fmtP(thMonthly);
+  document.getElementById('kpiTakeHomeSub').textContent   = `Actual reduction to net pay${tA.ecm > 0 ? ' (incl. ECM)' : ''}`;
+
+  document.getElementById('kpiMtr').textContent = fmtPct(inp.mtr);
+  document.getElementById('kpiGst').textContent = fmtAUD(inp.carPrice - inp.carPrice / 1.1);
+
+  // ── Alerts ──
+  renderAlerts(inp, fbt);
+
+  // ── Savings note ──
+  renderSavingsNote(inp, tA);
+
+  // ── Option A ──
+  const startStr = inp.startDate.toLocaleDateString('en-AU');
+  const endStr   = addMonths(inp.startDate, inp.totalTerm * 12).toLocaleDateString('en-AU');
+  document.getElementById('optATitle').textContent = `${inp.totalTerm}-Year Continuous Lease`;
+  document.getElementById('optADesc').textContent  = `${startStr} → ${endStr}  ·  ${fmtPct(inp.annualApr)} APR`;
+  renderResiduals('residualChipsA', resultA.residuals);
+
+  document.getElementById('optATotalSavings').textContent = fmtAUD(tA.totalSavings);
+  document.getElementById('optATotalNote').textContent    = `= Tax ${fmtAUD(tA.taxSaved)} + GST purchase ${fmtAUD(tA.gstSaveP)} + GST running ${fmtAUD(tA.gstRun)}`;
+  document.getElementById('optATaxSaved').textContent     = fmtAUD(tA.taxSaved);
+  document.getElementById('optAEcm').textContent          = fmtAUD(tA.ecm);
+
+  const exGST    = inp.carPrice / 1.1;
+  const resPct   = ATO_RES[inp.totalTerm] ?? (0.75 - 0.75 / 8 * inp.totalTerm);
+  const resVal   = exGST * resPct;
+  const interest = yA[0].leasePmt * 12 * inp.totalTerm - (exGST - resVal);
+  const net      = tA.totalSavings - Math.max(0, interest) - tA.ecm;
+  const netEl    = document.getElementById('optANet');
+  netEl.textContent = fmtAUD(net);
+  netEl.className   = `opt-kpi-val ${net >= 0 ? 'green' : 'danger'}`;
+
+  renderLedger('ledgerA', yA);
+  renderCostBd(resultA, inp);
+
+  // ── Comparison ──
+  const splitVal = document.getElementById('splitSelect').value || '';
+  if (splitVal && splitVal !== 'na') {
+    const firstYrs = parseInt(splitVal.split('+')[0]);
+    const secYrs   = inp.totalTerm - firstYrs;
+    const resultB  = runScenario(inp, 'split', firstYrs);
+    const aWins    = tA.totalSavings >= resultB.totals.totalSavings;
+
+    const startStr2 = inp.startDate.toLocaleDateString('en-AU');
+    const endStr2   = addMonths(inp.startDate, inp.totalTerm * 12).toLocaleDateString('en-AU');
+    const renewStr  = addMonths(inp.startDate, firstYrs * 12).toLocaleDateString('en-AU');
+
+    const dataA = { result: resultA, label: `Option A — ${inp.totalTerm}yr Continuous`,    color: 'green', win: aWins,  sub: `${startStr2} → ${endStr2}  ·  ${fmtPct(inp.annualApr)} APR` };
+    const dataB = { result: resultB, label: `Option B — ${firstYrs}yr + ${secYrs}yr Split`, color: 'amber', win: !aWins, sub: `Renewal on ${renewStr}` };
+
+    const ordered = aWins ? [dataA, dataB] : [dataB, dataA];
+
+    const grid = document.getElementById('compareGrid');
+    grid.innerHTML = '<div id="scWinner"></div><div id="scLoser"></div>';
+    renderScenCard('scWinner', ordered[0].result, ordered[0].label, ordered[0].color, true,  ordered[0].sub);
+    renderScenCard('scLoser',  ordered[1].result, ordered[1].label, ordered[1].color, false, ordered[1].sub);
+
+    renderVerdict(resultA, resultB, firstYrs, secYrs);
+  } else {
+    document.getElementById('compareGrid').innerHTML =
+      `<div style="padding:18px;text-align:center;color:var(--text-3);font-size:.79rem">Select a split structure above to compare.</div>`;
+  }
+} /* end runEngine */
+
+/* ══ EVENT WIRING ══ */
+[
+  'salary', 'otherSS', 'medicare', 'carPrice', 'startDate', 'leaseTerm', 'apr', 'residualPct',
+  'fbtCap', 'lctThreshold', 'phase2Date', 'phase3Date', 'postRate',
+  'rcElec', 'rcInsurance', 'rcRego', 'rcService', 'rcTyres', 'rcRoadside',
+].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', runEngine);
+});
+
+document.getElementById('leaseTerm').addEventListener('change', function () {
+  const p = ATO_RES[parseInt(this.value)];
+  if (p && !userEditedResidual) document.getElementById('residualPct').value = (p * 100).toFixed(2);
+  runEngine();
+});
+
+document.getElementById('residualPct').addEventListener('input', function () {
+  const ato = ATO_RES[parseInt(document.getElementById('leaseTerm').value)];
+  userEditedResidual = ato ? Math.abs(parseFloat(this.value) - ato * 100) > 0.01 : true;
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateSplitOpts(3);
+  runEngine();
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    applyTheme(saved);
+  } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+    applyTheme('light');
+  }
+});
+
+</script>
+</body>
+</html>
