@@ -4,6 +4,7 @@
   "description": "Novated lease calculator — Australia 2026",
   "scripts": {
     "build": "node build.js",
-    "watch": "node watch.js"
+    "watch": "node watch.js",
+    "test": "node --test tests/calculator.test.js"
   }
 }
