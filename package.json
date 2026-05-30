@@ -5,6 +5,11 @@
   "scripts": {
     "build": "node build.js",
     "watch": "node watch.js",
-    "test": "node --test tests/calculator.test.js"
+    "test": "node --test tests/calculator.test.js",
+    "test:e2e": "npx playwright test",
+    "prepare": "git config core.hooksPath .githooks"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }
