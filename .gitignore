@@ -1,0 +1,5 @@
+# Claude desktop app agent memory — never commit
+.claude/
+
+# Node
+node_modules/
