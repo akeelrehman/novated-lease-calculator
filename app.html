@@ -152,6 +152,8 @@ header h1 span{color:var(--accent)}
 .ci-blue{background:#0b1b2e} .ci-green{background:#0d2219} .ci-amber{background:#251c08} .ci-purple{background:#1a1040}
 .card-title{font-family:var(--display);font-size:.8rem;font-weight:700;color:var(--text)}
 .card-body{padding:14px}
+.card-body.collapsed{display:none}
+.sandbox-chevron{font-size:.65rem;color:var(--text-3);transition:transform .18s;margin-left:auto}
 .input-stack{display:flex;flex-direction:column;gap:12px}
 
 /* ══════════════════════════════════════════
@@ -491,8 +493,8 @@ tbody td:first-child{color:var(--text);font-weight:500;white-space:normal;min-wi
 
     <!-- Policy Sandbox -->
     <div class="card">
-      <div class="card-head"><div class="chicon ci-purple">⚙️</div><span class="card-title">Policy Sandbox</span><span class="badge amber hidden" id="sandboxModifiedBadge" style="margin-left:auto">⚠ Custom scenario</span></div>
-      <div class="card-body">
+      <div class="card-head" style="cursor:pointer" onclick="toggleSandbox()"><div class="chicon ci-purple">⚙️</div><span class="card-title">Policy Sandbox</span><span class="badge amber hidden" id="sandboxModifiedBadge" style="margin-left:auto">⚠ Custom scenario</span><span class="sandbox-chevron" id="sandboxChevron" style="margin-left:8px">▶</span></div>
+      <div class="card-body collapsed" id="sandboxBody">
         <p style="font-size:.7rem;color:var(--text-2);margin-bottom:9px;font-weight:300">Defaults = confirmed 2026 Budget. Adjust to stress-test alternative scenarios.</p>
         <div class="two-col">
           <div class="field">
@@ -1636,6 +1638,15 @@ function exportCSV(mode) {
   URL.revokeObjectURL(url);
 }
 
+
+/* ══ POLICY SANDBOX COLLAPSE ══ */
+function toggleSandbox() {
+  const body    = document.getElementById('sandboxBody');
+  const chevron = document.getElementById('sandboxChevron');
+  const isOpen  = !body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', isOpen);
+  chevron.textContent = isOpen ? '▶' : '▼';
+}
 
 /* ══ VIEW SWITCHING ══ */
 function switchView(view) {

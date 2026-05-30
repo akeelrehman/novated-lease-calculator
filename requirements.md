@@ -205,7 +205,7 @@ Six separate line items, all pre-tax packaged during exempt periods:
 
 ### 4.5 Policy Sandbox
 
-User-adjustable parameters for stress-testing. Defaults match confirmed 2026 Budget:
+User-adjustable parameters for stress-testing. Defaults match confirmed 2026 Budget. The section is **collapsed by default** — clicking the card header expands it. A `▶/▼` chevron indicates the open/closed state.
 
 | Input | Default | Notes |
 |---|---|---|
@@ -357,7 +357,39 @@ The following disclaimer must appear in the application footer (screen) and as t
 
 ---
 
-## 11. Known Limitations & Out of Scope
+## 11. Tooling & Testing
+
+### 11.1 Unit Tests
+
+- Runner: Node.js built-in test runner (`node --test`)
+- Location: `tests/calculator.test.js`
+- Harness: `tests/setup.js` (Node VM sandbox — loads src modules without a browser)
+- Coverage: `mRate`, `pmt`, `getFbt`, `calcYear`, ATO residuals, split-lease finance
+
+### 11.2 E2E Tests
+
+- Runner: Playwright (`@playwright/test`)
+- Location: `tests/e2e/app.spec.js`
+- Browser: headless Chromium
+- Server: `npx http-server` started automatically by Playwright’s `webServer` option on port 8080
+- Config: `playwright.config.js`
+- Scenarios covered: page load, Policy Sandbox collapse/expand, vehicle type switching, KPI tile population, theme toggle
+
+### 11.3 Pre-Commit Hook
+
+- Location: `.githooks/pre-commit`
+- Activated via: `npm install` → `prepare` script runs `git config core.hooksPath .githooks`
+- Sequence: unit tests → build → E2E tests
+- Commit is blocked if any step exits non-zero
+
+### 11.4 VS Code MCP (Playwright)
+
+- Config: `.vscode/mcp.json`
+- Exposes the `@playwright/mcp` server to the Copilot agent for browser-based tasks
+
+---
+
+## 12. Known Limitations & Out of Scope
 
 | Item | Status |
 |---|---|
@@ -378,3 +410,4 @@ The following disclaimer must appear in the application footer (screen) and as t
 | v1.0 | Initial build — EV only, continuous lease, basic savings calculation |
 | v2.0 | Added: payment frequency toggle (weekly/fortnightly/monthly), single-option main view with compare tab, configurable split structure selector (all valid splits for given term), residual amounts displayed per arrangement, vehicle type selector (BEV/PHEV/ICE) |
 | v2.1 | Fixed: PMT formula (correct present-value balloon form), FBT phase logic for $75k–LCT band in Phase 1 (no discount, previously incorrect), split lease residual basis (TD 93/142 total accumulated period), ECM logic (post-tax separate from pre-tax, not blended). Added: take-home pay impact KPI and ledger column, total savings decomposition note, programmatic PDF generation (jsPDF + autoTable replacing browser print), compare layout changed to full-width vertical stack (winner first, then loser) |
+| v2.2 | Added: Policy Sandbox collapsed by default (chevron toggle); Playwright E2E test suite (13 tests, headless Chromium); pre-commit hook (unit + E2E, blocks commit on failure); `.vscode/mcp.json` (Playwright MCP for Copilot agent) |

@@ -25,7 +25,7 @@ A client-side single-page web app that models the true financial impact of a nov
 - **Running costs packaging** — electricity, insurance, rego, servicing, tyres, roadside (pre-tax during exempt periods)
 - **ECM (Employee Contribution Method)** — auto-calculated when FBT rate > 0%
 - **Net benefit vs cash** — savings minus interest cost minus ECM, so you see the true bottom line
-- **Policy Sandbox** — tweak FBT cap, LCT threshold, phase dates and post-phase rate to stress-test scenarios
+- **Policy Sandbox** — tweak FBT cap, LCT threshold, phase dates and post-phase rate to stress-test scenarios (collapsed by default to reduce visual noise)
 - **PDF report** — full programmatic PDF (jsPDF + AutoTable) with no browser print quirks
 - **CSV export** — raw year-by-year data for both options
 - **Dark / light theme** — persisted in localStorage
@@ -86,9 +86,16 @@ novated-lease-calculator/
 │       └── app.js           # Main engine, event wiring, DOMContentLoaded
 ├── tests/
 │   ├── setup.js             # Node VM test harness (loads src files without a browser)
-│   └── calculator.test.js   # 45 unit tests (Node built-in test runner)
+│   ├── calculator.test.js   # 45 unit tests (Node built-in test runner)
+│   └── e2e/
+│       └── app.spec.js      # Playwright E2E tests (UI, collapse, theme, vehicle switching)
+├── .githooks/
+│   └── pre-commit           # Runs unit + E2E tests before every commit
+├── .vscode/
+│   └── mcp.json             # Playwright MCP server for Copilot agent
 ├── app.html                 # Built output — the deployable single-file app
 ├── build.js                 # Build script: concatenates src/ → app.html
+├── playwright.config.js     # Playwright config (Chromium, localhost:8080)
 ├── watch.js                 # File watcher: rebuilds on any src/ change
 ├── package.json
 └── .github/
@@ -100,26 +107,38 @@ novated-lease-calculator/
 
 ## Development
 
-**Prerequisites:** Node.js ≥ 20 (no npm dependencies for the app itself).
+**Prerequisites:** Node.js ≥ 20.
 
 ```bash
+# Install dev dependencies (Playwright) and activate the pre-commit hook
+npm install
+
 # One-time build
 npm run build        # → writes app.html
 
 # Watch mode (rebuilds on every src/ save)
 npm run watch
 
-# Run tests (45 unit tests, Node built-in runner)
+# Run unit tests (45 tests, Node built-in runner — no server needed)
 npm test
+
+# Run E2E tests (Playwright — builds app.html, starts http-server, runs Chromium)
+npm run test:e2e
 ```
 
 The build inlines all CSS and JS into a single self-contained `app.html`. Open it directly in a browser — no server needed.
+
+### Pre-commit hook
+
+The `.githooks/pre-commit` script runs the full test suite (unit + E2E) before every commit and blocks the commit if any test fails. The hook is activated automatically by `npm install` via the `prepare` script (`git config core.hooksPath .githooks`).
 
 ---
 
 ## Tests
 
-45 unit tests cover all critical calculation logic using Node's built-in test runner:
+### Unit tests (`tests/calculator.test.js`)
+
+45 tests covering all critical calculation logic using Node's built-in test runner:
 
 | Suite | What's tested |
 |---|---|
@@ -129,6 +148,23 @@ The build inlines all CSS and JS into a single self-contained `app.html`. Open i
 | `calcYear` | ECM=0 for exempt, ECM for ICE/partial, tax-saved math, MTR ordering |
 | ATO residuals | All 5 lease terms validated against TD 93/142 via `runScenario` |
 | Split lease | Row counts, FBT grandfathering across phase boundaries (incl. Phase 3 straddle) |
+
+### E2E tests (`tests/e2e/app.spec.js`)
+
+Playwright tests running in headless Chromium against the built `app.html`:
+
+| Test | What's verified |
+|---|---|
+| Page load | Title and `<h1>` are visible |
+| Sandbox collapsed on load | `#sandboxBody` is hidden; chevron shows `▶` |
+| Sandbox expands on click | Body becomes visible; chevron flips to `▼` |
+| Sandbox re-collapses | Double-click returns to collapsed state |
+| Vehicle type switching | PHEV/ICE note text and colour update; BEV restores exemption text |
+| KPI tiles populated | Finance payment tile is non-empty after page load |
+| Salary change recalculates | MTR tile updates when salary input changes |
+| Theme toggle (dark→light) | `data-theme="light"` applied to `<html>` |
+| Theme toggle (light→dark) | `data-theme` attribute removed |
+| Theme label updates | Label text flips between "Light mode" and "Dark mode" |
 
 ---
 

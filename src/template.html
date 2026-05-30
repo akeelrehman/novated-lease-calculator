@@ -153,8 +153,8 @@
 
     <!-- Policy Sandbox -->
     <div class="card">
-      <div class="card-head"><div class="chicon ci-purple">⚙️</div><span class="card-title">Policy Sandbox</span><span class="badge amber hidden" id="sandboxModifiedBadge" style="margin-left:auto">⚠ Custom scenario</span></div>
-      <div class="card-body">
+      <div class="card-head" style="cursor:pointer" onclick="toggleSandbox()"><div class="chicon ci-purple">⚙️</div><span class="card-title">Policy Sandbox</span><span class="badge amber hidden" id="sandboxModifiedBadge" style="margin-left:auto">⚠ Custom scenario</span><span class="sandbox-chevron" id="sandboxChevron" style="margin-left:8px">▶</span></div>
+      <div class="card-body collapsed" id="sandboxBody">
         <p style="font-size:.7rem;color:var(--text-2);margin-bottom:9px;font-weight:300">Defaults = confirmed 2026 Budget. Adjust to stress-test alternative scenarios.</p>
         <div class="two-col">
           <div class="field">

@@ -1,3 +1,12 @@
+/* ══ POLICY SANDBOX COLLAPSE ══ */
+function toggleSandbox() {
+  const body    = document.getElementById('sandboxBody');
+  const chevron = document.getElementById('sandboxChevron');
+  const isOpen  = !body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', isOpen);
+  chevron.textContent = isOpen ? '▶' : '▼';
+}
+
 /* ══ VIEW SWITCHING ══ */
 function switchView(view) {
   document.getElementById('viewSingle').classList.toggle('hidden', view !== 'single');

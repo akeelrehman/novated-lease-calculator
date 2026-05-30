@@ -7,6 +7,8 @@
 .ci-blue{background:#0b1b2e} .ci-green{background:#0d2219} .ci-amber{background:#251c08} .ci-purple{background:#1a1040}
 .card-title{font-family:var(--display);font-size:.8rem;font-weight:700;color:var(--text)}
 .card-body{padding:14px}
+.card-body.collapsed{display:none}
+.sandbox-chevron{font-size:.65rem;color:var(--text-3);transition:transform .18s;margin-left:auto}
 .input-stack{display:flex;flex-direction:column;gap:12px}
 
 /* ══════════════════════════════════════════

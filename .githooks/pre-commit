@@ -1,0 +1,35 @@
+#!/bin/sh
+# Pre-commit hook: runs unit tests then E2E tests.
+# Commit is blocked if either suite fails.
+#
+# Installed automatically via: npm run prepare
+# (sets git core.hooksPath to .githooks/)
+
+set -e
+
+echo ""
+echo "╔══════════════════════════════════════╗"
+echo "║         Pre-commit checks            ║"
+echo "╚══════════════════════════════════════╝"
+
+# ── 1. Unit tests (Node built-in runner, no server needed) ──
+echo ""
+echo "▶ Running unit tests..."
+npm test
+echo "✓ Unit tests passed"
+
+# ── 2. Build app.html (required for E2E) ──
+echo ""
+echo "▶ Building app.html..."
+npm run build
+echo "✓ Build complete"
+
+# ── 3. E2E tests (Playwright, launches Chromium + http-server) ──
+echo ""
+echo "▶ Running E2E tests..."
+npm run test:e2e
+echo "✓ E2E tests passed"
+
+echo ""
+echo "All checks passed — committing."
+echo ""
