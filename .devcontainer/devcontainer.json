@@ -20,7 +20,8 @@
         "GitHub.copilot",
         "GitHub.copilot-chat",
         "dbaeumer.vscode-eslint",
-        "ms-playwright.playwright"
+        "ms-playwright.playwright",
+        "ritwickdey.LiveServer"
       ],
       "settings": {
         "chat.agent.enabled": true,
