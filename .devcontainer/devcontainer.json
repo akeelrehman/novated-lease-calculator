@@ -1,0 +1,32 @@
+{
+  "name": "Novated Lease Calculator Dev",
+  "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/../../corporate-ca.pem,target=/usr/local/share/ca-certificates/corporate-ca.crt,type=bind"
+  ],
+  "postCreateCommand": "sudo update-ca-certificates && npm install && npx playwright install --with-deps chromium",
+  "remoteEnv": {
+    "NODE_EXTRA_CA_CERTS": "/usr/local/share/ca-certificates/corporate-ca.crt",
+    "NODE_OPTIONS": "--use-system-ca"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "dbaeumer.vscode-eslint",
+        "ms-playwright.playwright",
+        "ritwickdey.LiveServer"
+      ],
+      "settings": {
+        "chat.agent.enabled": true,
+        "chat.mcp.enabled": true
+      }
+    }
+  }
+}
